@@ -444,9 +444,51 @@ function getSemanticConventions() {
   return semanticConventions;
 }
 
+// Pipeline stage details for the OTLP Pipeline Architecture section
+const pipelineStages = {
+  instrumentation: {
+    name: 'Instrumentation',
+    description: 'Auto-instrumentation or manual SDK calls in application code generate telemetry data.',
+    keyOperations: ['Create spans', 'Record metrics', 'Emit log records'],
+    otlpProtocol: 'In-process SDK calls'
+  },
+  sdk: {
+    name: 'SDK',
+    description: 'The OTel SDK configures tracing/metrics/logs, manages sampling, batching, and export.',
+    keyOperations: ['Sampling', 'Batching', 'Export configuration'],
+    otlpProtocol: 'SDK → Collector via OTLP'
+  },
+  collector: {
+    name: 'Collector',
+    description: 'The OTel Collector receives OTLP via gRPC/HTTP, processes data, and exports to backends.',
+    keyOperations: ['Receive OTLP', 'Process (filter, enrich, sample)', 'Export to backends'],
+    otlpProtocol: 'OTLP/gRPC, OTLP/HTTP'
+  },
+  backends: {
+    name: 'Backends',
+    description: 'Backend systems store and visualize telemetry: tracing, metrics, and logging backends.',
+    keyOperations: ['Store telemetry', 'Visualize', 'Alert'],
+    otlpProtocol: 'Backend-specific protocols'
+  }
+};
+
+const pipelineStageOrder = ['instrumentation', 'sdk', 'collector', 'backends'];
+
+function getPipelineStageDetails(stageId) {
+  const stage = pipelineStages[stageId];
+  if (!stage) return null;
+  return stage;
+}
+
+function getNextPipelineStage(currentStageId) {
+  const idx = pipelineStageOrder.indexOf(currentStageId);
+  if (idx === -1 || idx >= pipelineStageOrder.length - 1) return null;
+  return pipelineStageOrder[idx + 1];
+}
+
 // Export for Node.js (test.js), expose globally for browser (<script>)
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { getResourceAttributes, getSignalTypes, getTraceSchema, getSpanFields, getFieldMetadata, getSpanRelationships, getMetricFields, getLogFields, getSemanticConventions };
+  module.exports = { getResourceAttributes, getSignalTypes, getTraceSchema, getSpanFields, getFieldMetadata, getSpanRelationships, getMetricFields, getLogFields, getSemanticConventions, getPipelineStageDetails, getNextPipelineStage };
 }
 if (typeof window !== 'undefined') {
   window.getResourceAttributes = getResourceAttributes;
@@ -458,4 +500,6 @@ if (typeof window !== 'undefined') {
   window.getMetricFields = getMetricFields;
   window.getLogFields = getLogFields;
   window.getSemanticConventions = getSemanticConventions;
+  window.getPipelineStageDetails = getPipelineStageDetails;
+  window.getNextPipelineStage = getNextPipelineStage;
 }

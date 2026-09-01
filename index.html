@@ -719,6 +719,346 @@ body {
   border-radius: 4px;
   font-family: var(--font-mono);
 }
+
+/* OTLP Pipeline Architecture */
+.pipeline-diagram {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: nowrap;
+  gap: 0;
+  margin: var(--spacing-md) 0;
+  padding: var(--spacing-sm);
+}
+
+.pipeline-stage {
+  background: var(--bg-tertiary);
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 18px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.25s;
+  min-width: 110px;
+  flex-shrink: 0;
+}
+
+.pipeline-stage:hover {
+  border-color: var(--otel-orange);
+  transform: translateY(-2px);
+}
+
+.pipeline-stage.active {
+  border-color: var(--otel-orange);
+  box-shadow: 0 0 12px 2px rgba(245, 168, 0, 0.4);
+}
+
+.pipeline-stage .stage-icon {
+  font-size: 28px;
+  margin-bottom: 6px;
+  display: block;
+}
+
+.pipeline-stage .stage-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.pipeline-stage.instrumentation { border-top: 3px solid var(--otel-orange); }
+.pipeline-stage.sdk { border-top: 3px solid var(--otel-orange-light); }
+.pipeline-stage.collector { border-top: 3px solid var(--otel-teal); }
+.pipeline-stage.backends { border-top: 3px solid var(--otel-blue); }
+
+/* Arrow + data packet container between stages */
+.pipeline-arrow {
+  position: relative;
+  flex: 1;
+  min-width: 60px;
+  max-width: 120px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.pipeline-arrow::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 8px;
+  height: 2px;
+  background: var(--border);
+  transform: translateY(-50%);
+}
+
+.pipeline-arrow .arrow-head {
+  position: absolute;
+  top: 50%;
+  right: 0;
+  width: 0;
+  height: 0;
+  border-left: 8px solid var(--border);
+  border-top: 5px solid transparent;
+  border-bottom: 5px solid transparent;
+  transform: translateY(-50%);
+}
+
+/* Animated data packets */
+.pipeline-arrow .data-packet {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--otel-orange);
+  transform: translateY(-50%);
+  opacity: 0;
+  animation: packet-flow 2.2s linear infinite;
+  box-shadow: 0 0 6px rgba(245, 168, 0, 0.6);
+}
+
+.pipeline-arrow .data-packet:nth-child(2) {
+  background: var(--otel-teal);
+  box-shadow: 0 0 6px rgba(66, 92, 199, 0.6);
+  animation-delay: 0.7s;
+}
+
+.pipeline-arrow .data-packet:nth-child(3) {
+  background: var(--otel-blue);
+  box-shadow: 0 0 6px rgba(66, 133, 244, 0.6);
+  animation-delay: 1.4s;
+}
+
+@keyframes packet-flow {
+  0% { left: 2%; opacity: 0; }
+  10% { opacity: 1; }
+  85% { opacity: 1; }
+  95% { opacity: 0; left: 88%; }
+  100% { left: 92%; opacity: 0; }
+}
+
+/* Stage detail panel */
+.pipeline-detail-panel {
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: var(--spacing-md);
+  margin-top: var(--spacing-sm);
+  display: none;
+}
+
+.pipeline-detail-panel.visible {
+  display: block;
+  animation: fade-in 0.3s ease-out;
+}
+
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.pipeline-detail-panel .detail-stage-name {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--otel-orange);
+  margin-bottom: 8px;
+}
+
+.pipeline-detail-panel .detail-description {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin-bottom: 12px;
+  line-height: 1.6;
+}
+
+.pipeline-detail-panel .detail-section-label {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+  font-family: var(--font-mono);
+}
+
+.pipeline-detail-panel .detail-ops-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 12px 0;
+}
+
+.pipeline-detail-panel .detail-ops-list li {
+  font-size: 13px;
+  color: var(--text-primary);
+  padding: 4px 0 4px 18px;
+  position: relative;
+  font-family: var(--font-mono);
+}
+
+.pipeline-detail-panel .detail-ops-list li::before {
+  content: '▸';
+  position: absolute;
+  left: 0;
+  color: var(--otel-teal);
+}
+
+.pipeline-detail-panel .detail-protocol {
+  font-size: 13px;
+  color: var(--otel-blue);
+  font-family: var(--font-mono);
+  background: rgba(66, 133, 244, 0.1);
+  padding: 6px 12px;
+  border-radius: 4px;
+  display: inline-block;
+}
+
+/* Trace context propagation diagram */
+.trace-propagation {
+  margin-top: var(--spacing-lg);
+  padding: var(--spacing-sm);
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.trace-propagation .tp-title {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: var(--spacing-sm);
+  font-family: var(--font-mono);
+}
+
+.trace-propagation .tp-diagram {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  flex-wrap: wrap;
+}
+
+.tp-service {
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: var(--spacing-sm);
+  min-width: 200px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.tp-service .svc-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--otel-orange);
+  margin-bottom: 10px;
+}
+
+.tp-service .svc-span-card {
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 8px 10px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  text-align: left;
+}
+
+.tp-service .svc-span-card .span-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.tp-service .svc-span-card .span-row:last-child { margin-bottom: 0; }
+
+.tp-service .svc-span-card .span-label {
+  color: var(--text-muted);
+}
+
+.tp-service .svc-span-card .span-val {
+  color: var(--text-primary);
+}
+
+.tp-service .svc-span-card .span-kind {
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(245, 168, 0, 0.15);
+  color: var(--otel-orange);
+  font-weight: 600;
+}
+
+.tp-service .svc-span-card .span-kind.client {
+  background: rgba(66, 133, 244, 0.15);
+  color: var(--otel-blue);
+}
+
+.tp-arrow {
+  position: relative;
+  flex: 1;
+  min-width: 100px;
+  max-width: 200px;
+  height: 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: visible;
+}
+
+.tp-arrow .tp-arrow-line {
+  position: absolute;
+  top: 60%;
+  left: 8%;
+  right: 8%;
+  height: 2px;
+  background: var(--otel-orange);
+}
+
+.tp-arrow .tp-arrow-line::after {
+  content: '';
+  position: absolute;
+  right: -2px;
+  top: 50%;
+  width: 0;
+  height: 0;
+  border-left: 8px solid var(--otel-orange);
+  border-top: 5px solid transparent;
+  border-bottom: 5px solid transparent;
+  transform: translateY(-50%);
+}
+
+.tp-arrow .tp-arrow-label {
+  position: relative;
+  top: -10px;
+  font-size: 10px;
+  font-family: var(--font-mono);
+  color: var(--otel-orange);
+  background: var(--bg-primary);
+  padding: 2px 6px;
+  border: 1px solid var(--otel-orange);
+  border-radius: 4px;
+  white-space: nowrap;
+  z-index: 1;
+}
+
+/* Animated packet on trace arrow */
+.tp-arrow .tp-packet {
+  position: absolute;
+  top: 60%;
+  left: 8%;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--otel-orange);
+  transform: translateY(-50%);
+  opacity: 0;
+  animation: packet-flow 2.5s linear infinite;
+  box-shadow: 0 0 5px rgba(245, 168, 0, 0.6);
+}
 </style>
 </head>
 <body>
@@ -868,6 +1208,84 @@ body {
         always means the same thing, regardless of instrumentation library. Click a category to expand its attributes.
       </p>
       <div id="semantic-conventions-container"></div>
+    </div>
+  </div>
+
+  <!-- OTLP Pipeline Architecture -->
+  <div class="section-card">
+    <div class="reveal-toggle open" onclick="this.classList.toggle('open'); this.nextElementSibling.classList.toggle('collapsed');">OTLP Pipeline Architecture</div>
+    <div class="card-body">
+      <h2><span class="icon-dot resource"></span>OTLP Pipeline Architecture</h2>
+      <p>
+        Telemetry flows through four stages: from <strong>instrumentation</strong> in your app, through the
+        <strong>SDK</strong>, to the <strong>Collector</strong>, and finally to <strong>backends</strong>. Click a stage
+        to see its details. The animated data packets show telemetry moving through the pipeline via OTLP.
+      </p>
+
+      <!-- Pipeline diagram -->
+      <div class="pipeline-diagram" id="pipeline-diagram"></div>
+
+      <!-- Stage detail panel -->
+      <div class="pipeline-detail-panel" id="pipeline-detail-panel"></div>
+
+      <!-- Trace context propagation -->
+      <div class="trace-propagation">
+        <div class="tp-title">Trace Context Propagation — cross-service trace context via W3C Trace Context headers</div>
+        <div class="tp-diagram">
+          <!-- Service A -->
+          <div class="tp-service">
+            <div class="svc-name">Service A</div>
+            <div class="svc-span-card">
+              <div class="span-row">
+                <span class="span-label">span:</span>
+                <span class="span-val">GET /api/order</span>
+              </div>
+              <div class="span-row">
+                <span class="span-label">kind:</span>
+                <span class="span-kind">SERVER</span>
+              </div>
+              <div class="span-row">
+                <span class="span-label">traceId:</span>
+                <span class="span-val">0af7651916cd43dd</span>
+              </div>
+              <div class="span-row">
+                <span class="span-label">spanId:</span>
+                <span class="span-val">b7ad6b7169203331</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Arrow with traceparent header -->
+          <div class="tp-arrow">
+            <div class="tp-arrow-label">traceparent: 00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01</div>
+            <div class="tp-arrow-line"></div>
+            <div class="tp-packet"></div>
+          </div>
+
+          <!-- Service B -->
+          <div class="tp-service">
+            <div class="svc-name">Service B</div>
+            <div class="svc-span-card">
+              <div class="span-row">
+                <span class="span-label">span:</span>
+                <span class="span-val">process_order</span>
+              </div>
+              <div class="span-row">
+                <span class="span-label">kind:</span>
+                <span class="span-kind client">INTERNAL</span>
+              </div>
+              <div class="span-row">
+                <span class="span-label">traceId:</span>
+                <span class="span-val">0af7651916cd43dd</span>
+              </div>
+              <div class="span-row">
+                <span class="span-label">parentSpanId:</span>
+                <span class="span-val">b7ad6b7169203331</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -1152,6 +1570,72 @@ body {
       </div>
     `;
   }).join('');
+})();
+
+// Render OTLP pipeline diagram and stage detail panel
+(function renderPipelineDiagram() {
+  const container = document.getElementById('pipeline-diagram');
+  const detailPanel = document.getElementById('pipeline-detail-panel');
+  if (!container) return;
+
+  const stageIcons = {
+    instrumentation: '⚙',
+    sdk: '🛠',
+    collector: '🔀',
+    backends: '🖥'
+  };
+  const stageOrder = ['instrumentation', 'sdk', 'collector', 'backends'];
+
+  // Build pipeline HTML: stage boxes with arrows between them
+  let html = '';
+  stageOrder.forEach((stageId, i) => {
+    const details = getPipelineStageDetails(stageId);
+    if (!details) return;
+    html += `
+      <div class="pipeline-stage ${stageId}" data-stage-id="${stageId}">
+        <span class="stage-icon">${stageIcons[stageId] || '📦'}</span>
+        <span class="stage-name">${details.name}</span>
+      </div>
+    `;
+    // Add arrow with animated packets between stages (not after last)
+    if (i < stageOrder.length - 1) {
+      const nextStage = getNextPipelineStage(stageId);
+      html += `
+        <div class="pipeline-arrow" data-from="${stageId}" data-to="${nextStage}">
+          <span class="data-packet"></span>
+          <span class="data-packet"></span>
+          <span class="data-packet"></span>
+          <span class="arrow-head"></span>
+        </div>
+      `;
+    }
+  });
+  container.innerHTML = html;
+
+  // Click handler for stage selection and detail panel rendering
+  container.addEventListener('click', (e) => {
+    const stage = e.target.closest('.pipeline-stage');
+    if (!stage) return;
+    const stageId = stage.dataset.stageId;
+    const details = getPipelineStageDetails(stageId);
+    if (!details || !detailPanel) return;
+
+    // Clear previous active states
+    container.querySelectorAll('.pipeline-stage').forEach(s => s.classList.remove('active'));
+    stage.classList.add('active');
+
+    // Render detail panel
+    const opsHtml = details.keyOperations.map(op => `<li>${op}</li>`).join('');
+    detailPanel.innerHTML = `
+      <div class="detail-stage-name">${details.name}</div>
+      <div class="detail-description">${details.description}</div>
+      <div class="detail-section-label">Key Operations</div>
+      <ul class="detail-ops-list">${opsHtml}</ul>
+      <div class="detail-section-label">OTLP Protocol</div>
+      <div class="detail-protocol">${details.otlpProtocol}</div>
+    `;
+    detailPanel.classList.add('visible');
+  });
 })();
 </script>
 </body>

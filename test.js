@@ -1,5 +1,5 @@
 const assert = require('assert');
-const { getResourceAttributes, getSignalTypes, getTraceSchema, getSpanFields, getFieldMetadata, getSpanRelationships, getMetricFields, getLogFields, getSemanticConventions } = require('./otel-logic.js');
+const { getResourceAttributes, getSignalTypes, getTraceSchema, getSpanFields, getFieldMetadata, getSpanRelationships, getMetricFields, getLogFields, getSemanticConventions, getPipelineStageDetails, getNextPipelineStage } = require('./otel-logic.js');
 
 // Test runner
 let passed = 0;
@@ -535,6 +535,91 @@ test('includes Service category', () => {
   const result = getSemanticConventions();
   const svc = result.find(c => c.category === 'Service');
   assert.ok(svc, 'Service category should be present');
+});
+
+// --- getPipelineStageDetails ---
+console.log('getPipelineStageDetails:');
+
+test('returns details for instrumentation with name, description, keyOperations, otlpProtocol', () => {
+  const result = getPipelineStageDetails('instrumentation');
+  assert.ok(result, 'should return a result for instrumentation');
+  assert.strictEqual(result.name, 'Instrumentation');
+  assert.ok('description' in result, 'should have description');
+  assert.ok(Array.isArray(result.keyOperations), 'keyOperations should be an array');
+  assert.ok(result.keyOperations.length >= 3, 'should have at least 3 key operations');
+  assert.ok('otlpProtocol' in result, 'should have otlpProtocol');
+  assert.ok(result.keyOperations.includes('Create spans'), 'should include Create spans');
+  assert.ok(result.keyOperations.includes('Record metrics'), 'should include Record metrics');
+  assert.ok(result.keyOperations.includes('Emit log records'), 'should include Emit log records');
+});
+
+test('returns details for sdk', () => {
+  const result = getPipelineStageDetails('sdk');
+  assert.ok(result, 'should return a result for sdk');
+  assert.strictEqual(result.name, 'SDK');
+  assert.ok('description' in result, 'should have description');
+  assert.ok(Array.isArray(result.keyOperations), 'keyOperations should be an array');
+  assert.ok(result.keyOperations.includes('Sampling'), 'should include Sampling');
+  assert.ok(result.keyOperations.includes('Batching'), 'should include Batching');
+  assert.ok(result.keyOperations.includes('Export configuration'), 'should include Export configuration');
+  assert.ok('otlpProtocol' in result, 'should have otlpProtocol');
+});
+
+test('returns details for collector', () => {
+  const result = getPipelineStageDetails('collector');
+  assert.ok(result, 'should return a result for collector');
+  assert.strictEqual(result.name, 'Collector');
+  assert.ok('description' in result, 'should have description');
+  assert.ok(Array.isArray(result.keyOperations), 'keyOperations should be an array');
+  assert.ok(result.keyOperations.includes('Receive OTLP'), 'should include Receive OTLP');
+  assert.ok(result.keyOperations.includes('Process (filter, enrich, sample)'), 'should include Process');
+  assert.ok(result.keyOperations.includes('Export to backends'), 'should include Export to backends');
+  assert.ok('otlpProtocol' in result, 'should have otlpProtocol');
+});
+
+test('returns details for backends', () => {
+  const result = getPipelineStageDetails('backends');
+  assert.ok(result, 'should return a result for backends');
+  assert.strictEqual(result.name, 'Backends');
+  assert.ok('description' in result, 'should have description');
+  assert.ok(Array.isArray(result.keyOperations), 'keyOperations should be an array');
+  assert.ok(result.keyOperations.includes('Store telemetry'), 'should include Store telemetry');
+  assert.ok(result.keyOperations.includes('Visualize'), 'should include Visualize');
+  assert.ok(result.keyOperations.includes('Alert'), 'should include Alert');
+  assert.ok('otlpProtocol' in result, 'should have otlpProtocol');
+});
+
+test('returns null for unknown stage', () => {
+  const result = getPipelineStageDetails('nonexistent');
+  assert.strictEqual(result, null, 'should return null for unknown stage');
+});
+
+// --- getNextPipelineStage ---
+console.log('getNextPipelineStage:');
+
+test('returns sdk for instrumentation', () => {
+  const result = getNextPipelineStage('instrumentation');
+  assert.strictEqual(result, 'sdk', 'instrumentation should be followed by sdk');
+});
+
+test('returns collector for sdk', () => {
+  const result = getNextPipelineStage('sdk');
+  assert.strictEqual(result, 'collector', 'sdk should be followed by collector');
+});
+
+test('returns backends for collector', () => {
+  const result = getNextPipelineStage('collector');
+  assert.strictEqual(result, 'backends', 'collector should be followed by backends');
+});
+
+test('returns null for backends', () => {
+  const result = getNextPipelineStage('backends');
+  assert.strictEqual(result, null, 'backends should have no next stage');
+});
+
+test('returns null for unknown stage', () => {
+  const result = getNextPipelineStage('nonexistent');
+  assert.strictEqual(result, null, 'unknown stage should return null');
 });
 
 // --- Summary ---
