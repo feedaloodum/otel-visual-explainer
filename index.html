@@ -237,25 +237,115 @@ body {
   text-decoration: none;
 }
 
-/* Reveal toggle (placeholder for Slice 5) */
+/* Reveal toggle — expandable/collapsible section cards */
 .reveal-toggle {
+  cursor: pointer;
+  user-select: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: var(--spacing-sm);
+  padding: 4px 0;
+  transition: color 0.2s;
+}
+
+.reveal-toggle:hover {
+  color: var(--text-primary);
+}
+
+.reveal-toggle::before {
+  content: '▸';
+  font-size: 14px;
+  transition: transform 0.2s;
+  width: 14px;
+  text-align: center;
+}
+
+.reveal-toggle.open::before {
+  transform: rotate(90deg);
+}
+
+.section-card .card-body {
+  max-height: 5000px;
+  overflow: hidden;
+  transition: max-height 0.35s ease-in-out, opacity 0.25s ease-in-out;
+  opacity: 1;
+}
+
+.section-card .card-body.collapsed {
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition: max-height 0.35s ease-in-out, opacity 0.15s ease-in-out;
+}
+
+.signal-content-wrapper {
+  max-height: 5000px;
+  overflow: hidden;
+  transition: max-height 0.35s ease-in-out, opacity 0.25s ease-in-out;
+  opacity: 1;
+}
+
+.signal-content-wrapper.collapsed {
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition: max-height 0.35s ease-in-out, opacity 0.15s ease-in-out;
+}
+
+/* Semantic conventions reference */
+.semncon-category {
+  margin-bottom: var(--spacing-sm);
+}
+
+.semncon-category-header {
   cursor: pointer;
   user-select: none;
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 13px;
-  color: var(--text-secondary);
-  margin-top: var(--spacing-sm);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--otel-orange);
+  padding: 8px 12px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: 0;
+  transition: background 0.2s;
 }
 
-.reveal-toggle::before {
+.semncon-category-header:hover {
+  background: rgba(245, 168, 0, 0.08);
+}
+
+.semncon-category-header::before {
   content: '▸';
+  font-size: 12px;
   transition: transform 0.2s;
+  width: 14px;
+  text-align: center;
+  color: var(--text-secondary);
 }
 
-.reveal-toggle.open::before {
+.semncon-category-header.open::before {
   transform: rotate(90deg);
+}
+
+.semncon-category-body {
+  max-height: 2000px;
+  overflow: hidden;
+  transition: max-height 0.35s ease-in-out, opacity 0.25s ease-in-out;
+  opacity: 1;
+}
+
+.semncon-category-body.collapsed {
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition: max-height 0.35s ease-in-out, opacity 0.15s ease-in-out;
 }
 
 /* Placeholder tabs (for Slice 2) */
@@ -641,121 +731,143 @@ body {
 
   <!-- What is OpenTelemetry? -->
   <div class="section-card">
-    <h2><span class="icon-dot resource"></span>What is OpenTelemetry?</h2>
-    <p class="intro-text">
-      OpenTelemetry (OTel) is a vendor-neutral observability standard for instrumenting,
-      generating, collecting, and exporting telemetry data. It unifies <strong style="color: var(--otel-orange);">traces</strong>,
-      <strong style="color: var(--otel-teal);">metrics</strong>, and
-      <strong style="color: var(--otel-blue);">logs</strong> under a single specification —
-      so you instrument once and ship to any backend.
-    </p>
-    <p class="intro-text" style="margin-top: 12px;">
-      Before OTel, you'd instrument separately for each backend (Jaeger for traces, Prometheus for metrics, ELK for logs).
-      OTel replaces this with <strong>one API, one SDK, one wire protocol (OTLP)</strong> — and you choose where the data goes.
-    </p>
-    <div class="signal-overview" id="signal-overview"></div>
+    <div class="reveal-toggle open" onclick="this.classList.toggle('open'); this.nextElementSibling.classList.toggle('collapsed');">What is OpenTelemetry?</div>
+    <div class="card-body">
+      <h2><span class="icon-dot resource"></span>What is OpenTelemetry?</h2>
+      <p class="intro-text">
+        OpenTelemetry (OTel) is a vendor-neutral observability standard for instrumenting,
+        generating, collecting, and exporting telemetry data. It unifies <strong style="color: var(--otel-orange);">traces</strong>,
+        <strong style="color: var(--otel-teal);">metrics</strong>, and
+        <strong style="color: var(--otel-blue);">logs</strong> under a single specification —
+        so you instrument once and ship to any backend.
+      </p>
+      <p class="intro-text" style="margin-top: 12px;">
+        Before OTel, you'd instrument separately for each backend (Jaeger for traces, Prometheus for metrics, ELK for logs).
+        OTel replaces this with <strong>one API, one SDK, one wire protocol (OTLP)</strong> — and you choose where the data goes.
+      </p>
+      <div class="signal-overview" id="signal-overview"></div>
+    </div>
   </div>
 
   <!-- Resource Model -->
   <div class="section-card highlight-orange">
-    <h2><span class="icon-dot resource"></span>The Resource Model</h2>
-    <p>
-      A <strong>Resource</strong> is the shared foundation across all three signals. It describes the entity
-      producing telemetry — your service, host, container, or cloud instance. Every trace, metric, and log
-      carries the same Resource, so you can correlate across signals and filter by source.
-    </p>
-    <p style="font-size: 13px; color: var(--text-muted); font-family: var(--font-mono); margin-bottom: 12px;">
-      Resource → InstrumentationScope → Signal (Span | Metric | LogRecord)
-    </p>
-    <table class="resource-table" id="resource-table">
-      <thead>
-        <tr>
-          <th>Attribute</th>
-          <th>Type</th>
-          <th>Required</th>
-          <th>Description</th>
-          <th>Example</th>
-        </tr>
-      </thead>
-      <tbody id="resource-table-body"></tbody>
-    </table>
+    <div class="reveal-toggle open" onclick="this.classList.toggle('open'); this.nextElementSibling.classList.toggle('collapsed');">The Resource Model</div>
+    <div class="card-body">
+      <h2><span class="icon-dot resource"></span>The Resource Model</h2>
+      <p>
+        A <strong>Resource</strong> is the shared foundation across all three signals. It describes the entity
+        producing telemetry — your service, host, container, or cloud instance. Every trace, metric, and log
+        carries the same Resource, so you can correlate across signals and filter by source.
+      </p>
+      <p style="font-size: 13px; color: var(--text-muted); font-family: var(--font-mono); margin-bottom: 12px;">
+        Resource → InstrumentationScope → Signal (Span | Metric | LogRecord)
+      </p>
+      <table class="resource-table" id="resource-table">
+        <thead>
+          <tr>
+            <th>Attribute</th>
+            <th>Type</th>
+            <th>Required</th>
+            <th>Description</th>
+            <th>Example</th>
+          </tr>
+        </thead>
+        <tbody id="resource-table-body"></tbody>
+      </table>
+    </div>
   </div>
 
   <!-- Signal Schema Section -->
   <div class="section-card" style="padding: 0; overflow: hidden;">
     <div style="padding: var(--spacing-md); border-bottom: 1px solid var(--border);">
-      <h2 style="margin-bottom: 0;"><span class="icon-dot traces"></span>Signal Schemas</h2>
+      <div class="reveal-toggle open" style="margin-bottom: 0;" onclick="var body = this.closest('.section-card').querySelector('.signal-content-wrapper'); body.classList.toggle('collapsed'); this.classList.toggle('open');">Signal Schemas</div>
     </div>
-    <div class="signal-tabs">
-      <button class="signal-tab traces active" data-signal="traces"><span class="tab-dot"></span>Traces</button>
-      <button class="signal-tab metrics" data-signal="metrics"><span class="tab-dot"></span>Metrics</button>
-      <button class="signal-tab logs" data-signal="logs"><span class="tab-dot"></span>Logs</button>
+    <div class="signal-content-wrapper">
+      <div class="signal-tabs">
+        <button class="signal-tab traces active" data-signal="traces"><span class="tab-dot"></span>Traces</button>
+        <button class="signal-tab metrics" data-signal="metrics"><span class="tab-dot"></span>Metrics</button>
+        <button class="signal-tab logs" data-signal="logs"><span class="tab-dot"></span>Logs</button>
+      </div>
+      <div class="signal-content">
+        <!-- Traces pane -->
+        <div class="signal-pane active" id="pane-traces">
+          <div class="schema-hierarchy">
+            <div class="level"><span class="level-name">Resource</span><span class="level-desc">— describes the service/host producing telemetry</span></div>
+            <div class="level"><span class="level-arrow">→</span><span class="level-name">InstrumentationScope</span><span class="level-desc">— identifies the instrumentation library</span></div>
+            <div class="level"><span class="level-arrow">→</span><span class="level-name">Span</span><span class="level-desc">— a unit of work in a distributed trace</span></div>
+          </div>
+          <div class="trace-tree-section">
+            <div class="trace-tree-header">Sample Trace Tree — click a span to highlight relationships</div>
+            <div class="trace-tree" id="trace-tree"></div>
+          </div>
+          <table class="fields-table" id="span-fields-table">
+            <thead>
+              <tr>
+                <th>Field</th>
+                <th>Type</th>
+                <th>Req</th>
+                <th>Description</th>
+                <th>Example</th>
+              </tr>
+            </thead>
+            <tbody id="span-fields-body"></tbody>
+          </table>
+        </div>
+        <!-- Metrics pane -->
+        <div class="signal-pane" id="pane-metrics">
+          <div class="schema-hierarchy metrics-hierarchy">
+            <div class="level"><span class="level-name metrics">Resource</span><span class="level-desc">— describes the service/host producing telemetry</span></div>
+            <div class="level"><span class="level-arrow">→</span><span class="level-name metrics">InstrumentationScope</span><span class="level-desc">— identifies the instrumentation library</span></div>
+            <div class="level"><span class="level-arrow">→</span><span class="level-name metrics">Metric</span><span class="level-desc">— an instrument (Counter, Gauge, Histogram…) with data points</span></div>
+          </div>
+          <table class="fields-table" id="metric-fields-table">
+            <thead>
+              <tr>
+                <th>Instrument</th>
+                <th>Type</th>
+                <th>Req</th>
+                <th>Description</th>
+                <th>Sub-Fields</th>
+              </tr>
+            </thead>
+            <tbody id="metric-fields-body"></tbody>
+          </table>
+        </div>
+        <!-- Logs pane -->
+        <div class="signal-pane" id="pane-logs">
+          <div class="schema-hierarchy logs-hierarchy">
+            <div class="level"><span class="level-name logs">Resource</span><span class="level-desc">— describes the service/host producing telemetry</span></div>
+            <div class="level"><span class="level-arrow">→</span><span class="level-name logs">InstrumentationScope</span><span class="level-desc">— identifies the instrumentation library</span></div>
+            <div class="level"><span class="level-arrow">→</span><span class="level-name logs">LogRecord</span><span class="level-desc">— a discrete event with timestamp, severity, and trace correlation</span></div>
+          </div>
+          <table class="fields-table" id="log-fields-table">
+            <thead>
+              <tr>
+                <th>Field</th>
+                <th>Type</th>
+                <th>Req</th>
+                <th>Description</th>
+                <th>Example</th>
+              </tr>
+            </thead>
+            <tbody id="log-fields-body"></tbody>
+          </table>
+        </div>
+      </div>
     </div>
-    <div class="signal-content">
-      <!-- Traces pane -->
-      <div class="signal-pane active" id="pane-traces">
-        <div class="schema-hierarchy">
-          <div class="level"><span class="level-name">Resource</span><span class="level-desc">— describes the service/host producing telemetry</span></div>
-          <div class="level"><span class="level-arrow">→</span><span class="level-name">InstrumentationScope</span><span class="level-desc">— identifies the instrumentation library</span></div>
-          <div class="level"><span class="level-arrow">→</span><span class="level-name">Span</span><span class="level-desc">— a unit of work in a distributed trace</span></div>
-        </div>
-        <div class="trace-tree-section">
-          <div class="trace-tree-header">Sample Trace Tree — click a span to highlight relationships</div>
-          <div class="trace-tree" id="trace-tree"></div>
-        </div>
-        <table class="fields-table" id="span-fields-table">
-          <thead>
-            <tr>
-              <th>Field</th>
-              <th>Type</th>
-              <th>Req</th>
-              <th>Description</th>
-              <th>Example</th>
-            </tr>
-          </thead>
-          <tbody id="span-fields-body"></tbody>
-        </table>
-      </div>
-      <!-- Metrics pane -->
-      <div class="signal-pane" id="pane-metrics">
-        <div class="schema-hierarchy metrics-hierarchy">
-          <div class="level"><span class="level-name metrics">Resource</span><span class="level-desc">— describes the service/host producing telemetry</span></div>
-          <div class="level"><span class="level-arrow">→</span><span class="level-name metrics">InstrumentationScope</span><span class="level-desc">— identifies the instrumentation library</span></div>
-          <div class="level"><span class="level-arrow">→</span><span class="level-name metrics">Metric</span><span class="level-desc">— an instrument (Counter, Gauge, Histogram…) with data points</span></div>
-        </div>
-        <table class="fields-table" id="metric-fields-table">
-          <thead>
-            <tr>
-              <th>Instrument</th>
-              <th>Type</th>
-              <th>Req</th>
-              <th>Description</th>
-              <th>Sub-Fields</th>
-            </tr>
-          </thead>
-          <tbody id="metric-fields-body"></tbody>
-        </table>
-      </div>
-      <!-- Logs pane -->
-      <div class="signal-pane" id="pane-logs">
-        <div class="schema-hierarchy logs-hierarchy">
-          <div class="level"><span class="level-name logs">Resource</span><span class="level-desc">— describes the service/host producing telemetry</span></div>
-          <div class="level"><span class="level-arrow">→</span><span class="level-name logs">InstrumentationScope</span><span class="level-desc">— identifies the instrumentation library</span></div>
-          <div class="level"><span class="level-arrow">→</span><span class="level-name logs">LogRecord</span><span class="level-desc">— a discrete event with timestamp, severity, and trace correlation</span></div>
-        </div>
-        <table class="fields-table" id="log-fields-table">
-          <thead>
-            <tr>
-              <th>Field</th>
-              <th>Type</th>
-              <th>Req</th>
-              <th>Description</th>
-              <th>Example</th>
-            </tr>
-          </thead>
-          <tbody id="log-fields-body"></tbody>
-        </table>
-      </div>
+  </div>
+
+  <!-- Semantic Conventions Reference -->
+  <div class="section-card">
+    <div class="reveal-toggle open" onclick="this.classList.toggle('open'); this.nextElementSibling.classList.toggle('collapsed');">Semantic Conventions Reference</div>
+    <div class="card-body">
+      <h2><span class="icon-dot resource"></span>Semantic Conventions</h2>
+      <p>
+        OpenTelemetry defines standard attribute names for common operations. These <strong>semantic conventions</strong>
+        ensure consistent labels across languages and backends — so <code style="color: var(--otel-orange);">http.method</code>
+        always means the same thing, regardless of instrumentation library. Click a category to expand its attributes.
+      </p>
+      <div id="semantic-conventions-container"></div>
     </div>
   </div>
 
@@ -1005,6 +1117,41 @@ body {
   });
 
   inspectorClose.addEventListener('click', hideInspector);
+})();
+
+// Render semantic conventions reference
+(function renderSemanticConventions() {
+  const container = document.getElementById('semantic-conventions-container');
+  if (!container) return;
+  const conventions = getSemanticConventions();
+  container.innerHTML = conventions.map(cat => {
+    const rows = cat.attributes.map(attr => `
+      <tr>
+        <td class="field-name">${attr.name}</td>
+        <td class="field-type">${attr.type}</td>
+        <td><span class="field-required ${attr.required ? 'yes' : 'no'}">${attr.required ? 'req' : 'opt'}</span></td>
+        <td class="field-desc">${attr.description}</td>
+      </tr>
+    `).join('');
+    return `
+      <div class="semncon-category">
+        <div class="semncon-category-header open" onclick="this.classList.toggle('open'); this.nextElementSibling.classList.toggle('collapsed');">${cat.category}</div>
+        <div class="semncon-category-body">
+          <table class="fields-table">
+            <thead>
+              <tr>
+                <th>Attribute</th>
+                <th>Type</th>
+                <th>Req</th>
+                <th>Description</th>
+              </tr>
+            </thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>
+      </div>
+    `;
+  }).join('');
 })();
 </script>
 </body>

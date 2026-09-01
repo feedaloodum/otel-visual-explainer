@@ -385,9 +385,68 @@ function getSpanRelationships(spanId) {
   };
 }
 
+// Semantic conventions — standard OTel attribute names grouped by category
+const semanticConventions = [
+  {
+    category: 'HTTP',
+    attributes: [
+      { name: 'http.method', type: 'string', description: 'HTTP request method (e.g., GET, POST, PUT, DELETE).', required: true },
+      { name: 'http.status_code', type: 'int', description: 'HTTP response status code (e.g., 200, 404, 500).', required: false },
+      { name: 'http.url', type: 'string', description: 'Full HTTP request URL including scheme, host, path, and query string.', required: false },
+      { name: 'http.request.body.size', type: 'int', description: 'Size of the HTTP request body in bytes.', required: false },
+      { name: 'http.response.body.size', type: 'int', description: 'Size of the HTTP response body in bytes.', required: false },
+      { name: 'http.scheme', type: 'string', description: 'The URI scheme (e.g., http, https).', required: false },
+      { name: 'http.target', type: 'string', description: 'The full request target as sent in the request line (path and query).', required: false }
+    ]
+  },
+  {
+    category: 'Database',
+    attributes: [
+      { name: 'db.system', type: 'string', description: 'The database management system type (e.g., postgresql, mysql, mongodb).', required: true },
+      { name: 'db.statement', type: 'string', description: 'The database statement being executed.', required: false },
+      { name: 'db.operation', type: 'string', description: 'The database operation being performed (e.g., insert, select, update).', required: false },
+      { name: 'db.connection_string', type: 'string', description: 'The connection string used to connect to the database.', required: false },
+      { name: 'db.user', type: 'string', description: 'The database user name used to access the database.', required: false },
+      { name: 'db.name', type: 'string', description: 'The database name being accessed.', required: false }
+    ]
+  },
+  {
+    category: 'Messaging',
+    attributes: [
+      { name: 'messaging.system', type: 'string', description: 'The messaging system type (e.g., kafka, rabbitmq, activemq).', required: true },
+      { name: 'messaging.destination', type: 'string', description: 'The destination name (e.g., topic or queue name).', required: false },
+      { name: 'messaging.operation', type: 'string', description: 'The messaging operation being performed (e.g., publish, receive, process).', required: false },
+      { name: 'messaging.message.id', type: 'string', description: 'A unique identifier for the message.', required: false },
+      { name: 'messaging.message.body.size', type: 'int', description: 'The size of the message body in bytes.', required: false }
+    ]
+  },
+  {
+    category: 'Host',
+    attributes: [
+      { name: 'host.name', type: 'string', description: 'The hostname of the machine running the service.', required: false },
+      { name: 'host.id', type: 'string', description: 'A unique host identifier. Useful for cloud instances where hostname may change.', required: false },
+      { name: 'host.arch', type: 'string', description: 'The CPU architecture of the host (e.g., amd64, arm64).', required: false },
+      { name: 'host.type', type: 'string', description: 'The type of host (e.g., cloud provider instance type).', required: false }
+    ]
+  },
+  {
+    category: 'Service',
+    attributes: [
+      { name: 'service.name', type: 'string', description: 'The name of the service being instrumented. Primary identifier for a service.', required: true },
+      { name: 'service.instance.id', type: 'string', description: 'A unique identifier for this instance of the service.', required: false },
+      { name: 'service.version', type: 'string', description: 'The version of the service. Useful for correlating issues with deployments.', required: false },
+      { name: 'service.namespace', type: 'string', description: 'A group or category name for the service. Useful for organizing services into logical groups.', required: false }
+    ]
+  }
+];
+
+function getSemanticConventions() {
+  return semanticConventions;
+}
+
 // Export for Node.js (test.js), expose globally for browser (<script>)
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { getResourceAttributes, getSignalTypes, getTraceSchema, getSpanFields, getFieldMetadata, getSpanRelationships, getMetricFields, getLogFields };
+  module.exports = { getResourceAttributes, getSignalTypes, getTraceSchema, getSpanFields, getFieldMetadata, getSpanRelationships, getMetricFields, getLogFields, getSemanticConventions };
 }
 if (typeof window !== 'undefined') {
   window.getResourceAttributes = getResourceAttributes;
@@ -398,4 +457,5 @@ if (typeof window !== 'undefined') {
   window.getSpanRelationships = getSpanRelationships;
   window.getMetricFields = getMetricFields;
   window.getLogFields = getLogFields;
+  window.getSemanticConventions = getSemanticConventions;
 }

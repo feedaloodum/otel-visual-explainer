@@ -1,5 +1,5 @@
 const assert = require('assert');
-const { getResourceAttributes, getSignalTypes, getTraceSchema, getSpanFields, getFieldMetadata, getSpanRelationships, getMetricFields, getLogFields } = require('./otel-logic.js');
+const { getResourceAttributes, getSignalTypes, getTraceSchema, getSpanFields, getFieldMetadata, getSpanRelationships, getMetricFields, getLogFields, getSemanticConventions } = require('./otel-logic.js');
 
 // Test runner
 let passed = 0;
@@ -463,6 +463,78 @@ test('still returns metadata for traces.traceId (unchanged)', () => {
   const result = getFieldMetadata('traces', 'traceId');
   assert.ok(result, 'should return a result for traces.traceId');
   assert.strictEqual(result.name, 'traceId');
+});
+
+// --- getSemanticConventions ---
+console.log('getSemanticConventions:');
+
+test('returns an array', () => {
+  const result = getSemanticConventions();
+  assert.ok(Array.isArray(result), 'should return an array');
+});
+
+test('has at least 5 categories', () => {
+  const result = getSemanticConventions();
+  assert.ok(result.length >= 5, `expected >= 5 categories, got ${result.length}`);
+});
+
+test('includes HTTP category', () => {
+  const result = getSemanticConventions();
+  const http = result.find(c => c.category === 'HTTP');
+  assert.ok(http, 'HTTP category should be present');
+});
+
+test('includes Database category', () => {
+  const result = getSemanticConventions();
+  const db = result.find(c => c.category === 'Database');
+  assert.ok(db, 'Database category should be present');
+});
+
+test('HTTP category has http.method', () => {
+  const result = getSemanticConventions();
+  const http = result.find(c => c.category === 'HTTP');
+  assert.ok(http, 'HTTP category should be present');
+  const method = http.attributes.find(a => a.name === 'http.method');
+  assert.ok(method, 'http.method should be in HTTP category');
+});
+
+test('http.method is required', () => {
+  const result = getSemanticConventions();
+  const http = result.find(c => c.category === 'HTTP');
+  const method = http.attributes.find(a => a.name === 'http.method');
+  assert.strictEqual(method.required, true, 'http.method should be required');
+});
+
+test('each attribute has name, type, description, required', () => {
+  const result = getSemanticConventions();
+  for (const cat of result) {
+    assert.ok('category' in cat, `category missing 'category' field`);
+    assert.ok(Array.isArray(cat.attributes), `${cat.category} attributes should be an array`);
+    for (const attr of cat.attributes) {
+      assert.ok('name' in attr, `${cat.category}: attribute missing name`);
+      assert.ok('type' in attr, `${cat.category}.${attr.name} missing type`);
+      assert.ok('description' in attr, `${cat.category}.${attr.name} missing description`);
+      assert.ok('required' in attr, `${cat.category}.${attr.name} missing required`);
+    }
+  }
+});
+
+test('includes Messaging category', () => {
+  const result = getSemanticConventions();
+  const msg = result.find(c => c.category === 'Messaging');
+  assert.ok(msg, 'Messaging category should be present');
+});
+
+test('includes Host category', () => {
+  const result = getSemanticConventions();
+  const host = result.find(c => c.category === 'Host');
+  assert.ok(host, 'Host category should be present');
+});
+
+test('includes Service category', () => {
+  const result = getSemanticConventions();
+  const svc = result.find(c => c.category === 'Service');
+  assert.ok(svc, 'Service category should be present');
 });
 
 // --- Summary ---
