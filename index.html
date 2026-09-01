@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OpenTelemetry — Visual Explainer</title>
+<style>
+:root {
+  --otel-orange: #f5a800;
+  --otel-teal: #425cc7;
+  --otel-blue: #4285f4;
+  --otel-orange-light: #ffb838;
+  --otel-teal-light: #5a73d8;
+  --bg-primary: #0d1117;
+  --bg-secondary: #161b22;
+  --bg-tertiary: #1c2330;
+  --border: #30363d;
+  --text-primary: #e6edf3;
+  --text-secondary: #8b949e;
+  --text-muted: #6e7681;
+  --font-mono: ui-monospace, 'SF Mono', 'Cascadia Code', 'Source Code Pro', Menlo, Consolas, 'DejaVu Sans Mono', monospace;
+  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+  --radius: 8px;
+  --spacing-sm: 12px;
+  --spacing-md: 20px;
+  --spacing-lg: 32px;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+.container {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: var(--spacing-lg) var(--spacing-md);
+}
+
+/* Header */
+.header {
+  text-align: center;
+  margin-bottom: var(--spacing-lg);
+  padding-bottom: var(--spacing-md);
+  border-bottom: 1px solid var(--border);
+}
+
+.header h1 {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+
+.header h1 .otel-badge {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  background: var(--otel-orange);
+  border-radius: 50%;
+  margin-right: 10px;
+  vertical-align: middle;
+  animation: pulse 2.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(245, 168, 0, 0.4); }
+  50% { opacity: 0.6; box-shadow: 0 0 0 6px rgba(245, 168, 0, 0); }
+}
+
+.header .subtitle {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin-top: 8px;
+  font-family: var(--font-mono);
+}
+
+/* Section cards */
+.section-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: var(--spacing-md);
+  margin-bottom: var(--spacing-md);
+}
+
+.section-card h2 {
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: var(--spacing-sm);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.section-card h2 .icon-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.icon-dot.traces { background: var(--otel-orange); }
+.icon-dot.metrics { background: var(--otel-teal); }
+.icon-dot.logs { background: var(--otel-blue); }
+.icon-dot.resource { background: var(--otel-orange-light); }
+
+.section-card p {
+  color: var(--text-secondary);
+  font-size: 15px;
+  margin-bottom: var(--spacing-sm);
+}
+
+.section-card .intro-text {
+  color: var(--text-primary);
+  font-size: 15px;
+  line-height: 1.7;
+}
+
+/* Signal overview cards */
+.signal-overview {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: var(--spacing-sm);
+  margin-top: var(--spacing-md);
+}
+
+.signal-card {
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: var(--spacing-sm);
+  text-align: center;
+  transition: border-color 0.2s;
+}
+
+.signal-card:hover {
+  border-color: var(--otel-orange);
+}
+
+.signal-card .signal-icon {
+  font-size: 24px;
+  margin-bottom: 8px;
+}
+
+.signal-card .signal-name {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.signal-card .signal-desc {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.signal-card.traces .signal-name { color: var(--otel-orange); }
+.signal-card.metrics .signal-name { color: var(--otel-teal); }
+.signal-card.logs .signal-name { color: var(--otel-blue); }
+
+/* Resource attributes table */
+.resource-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: var(--spacing-sm);
+  font-family: var(--font-mono);
+  font-size: 13px;
+}
+
+.resource-table th {
+  text-align: left;
+  padding: 8px 12px;
+  color: var(--text-secondary);
+  font-weight: 600;
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.resource-table td {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-primary);
+}
+
+.resource-table .attr-name { color: var(--otel-orange); }
+.resource-table .attr-type { color: var(--otel-teal); }
+.resource-table .attr-required {
+  display: inline-block;
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-weight: 600;
+}
+.resource-table .attr-required.yes {
+  background: rgba(245, 168, 0, 0.15);
+  color: var(--otel-orange);
+}
+.resource-table .attr-required.no {
+  background: rgba(139, 148, 158, 0.15);
+  color: var(--text-muted);
+}
+.resource-table .attr-desc {
+  color: var(--text-secondary);
+  font-family: var(--font-sans);
+  font-size: 13px;
+}
+.resource-table .attr-example {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+/* Highlighting */
+.highlight-orange { border-left: 3px solid var(--otel-orange); }
+.highlight-teal { border-left: 3px solid var(--otel-teal); }
+.highlight-blue { border-left: 3px solid var(--otel-blue); }
+
+/* Footer */
+.footer {
+  text-align: center;
+  padding: var(--spacing-md);
+  color: var(--text-muted);
+  font-size: 12px;
+  border-top: 1px solid var(--border);
+  margin-top: var(--spacing-lg);
+  font-family: var(--font-mono);
+}
+
+.footer a {
+  color: var(--otel-orange);
+  text-decoration: none;
+}
+
+/* Reveal toggle (placeholder for Slice 5) */
+.reveal-toggle {
+  cursor: pointer;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-top: var(--spacing-sm);
+}
+
+.reveal-toggle::before {
+  content: '▸';
+  transition: transform 0.2s;
+}
+
+.reveal-toggle.open::before {
+  transform: rotate(90deg);
+}
+
+/* Placeholder tabs (for Slice 2) */
+.placeholder-tabs {
+  margin-top: var(--spacing-lg);
+  padding: var(--spacing-md);
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 13px;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <!-- Header -->
+  <div class="header">
+    <h1><span class="otel-badge"></span>OpenTelemetry Visual Explainer</h1>
+    <div class="subtitle">one standard · three signals · one pipeline</div>
+  </div>
+
+  <!-- What is OpenTelemetry? -->
+  <div class="section-card">
+    <h2><span class="icon-dot resource"></span>What is OpenTelemetry?</h2>
+    <p class="intro-text">
+      OpenTelemetry (OTel) is a vendor-neutral observability standard for instrumenting,
+      generating, collecting, and exporting telemetry data. It unifies <strong style="color: var(--otel-orange);">traces</strong>,
+      <strong style="color: var(--otel-teal);">metrics</strong>, and
+      <strong style="color: var(--otel-blue);">logs</strong> under a single specification —
+      so you instrument once and ship to any backend.
+    </p>
+    <p class="intro-text" style="margin-top: 12px;">
+      Before OTel, you'd instrument separately for each backend (Jaeger for traces, Prometheus for metrics, ELK for logs).
+      OTel replaces this with <strong>one API, one SDK, one wire protocol (OTLP)</strong> — and you choose where the data goes.
+    </p>
+    <div class="signal-overview" id="signal-overview"></div>
+  </div>
+
+  <!-- Resource Model -->
+  <div class="section-card highlight-orange">
+    <h2><span class="icon-dot resource"></span>The Resource Model</h2>
+    <p>
+      A <strong>Resource</strong> is the shared foundation across all three signals. It describes the entity
+      producing telemetry — your service, host, container, or cloud instance. Every trace, metric, and log
+      carries the same Resource, so you can correlate across signals and filter by source.
+    </p>
+    <p style="font-size: 13px; color: var(--text-muted); font-family: var(--font-mono); margin-bottom: 12px;">
+      Resource → InstrumentationScope → Signal (Span | Metric | LogRecord)
+    </p>
+    <table class="resource-table" id="resource-table">
+      <thead>
+        <tr>
+          <th>Attribute</th>
+          <th>Type</th>
+          <th>Required</th>
+          <th>Description</th>
+          <th>Example</th>
+        </tr>
+      </thead>
+      <tbody id="resource-table-body"></tbody>
+    </table>
+  </div>
+
+  <!-- Placeholder for future slices -->
+  <div class="placeholder-tabs">
+    Signal schemas (Traces / Metrics / Logs) · Pipeline flow · Where Cribl Fits — coming in subsequent slices
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    OpenTelemetry Visual Explainer · self-contained · works offline · <a href="https://opentelemetry.io">opentelemetry.io</a>
+  </div>
+</div>
+
+<script src="otel-logic.js"></script>
+<script>
+// Render signal overview cards
+(function renderSignalOverview() {
+  const container = document.getElementById('signal-overview');
+  if (!container) return;
+  const signals = getSignalTypes();
+  const icons = { traces: '🔮', metrics: '📊', logs: '📋' };
+  container.innerHTML = signals.map(s => `
+    <div class="signal-card ${s.id}">
+      <div class="signal-icon">${icons[s.id] || '📡'}</div>
+      <div class="signal-name">${s.name}</div>
+      <div class="signal-desc">${s.description}</div>
+    </div>
+  `).join('');
+})();
+
+// Render resource attributes table
+(function renderResourceTable() {
+  const tbody = document.getElementById('resource-table-body');
+  if (!tbody) return;
+  const attrs = getResourceAttributes();
+  tbody.innerHTML = attrs.map(a => `
+    <tr>
+      <td class="attr-name">${a.name}</td>
+      <td class="attr-type">${a.type}</td>
+      <td><span class="attr-required ${a.required ? 'yes' : 'no'}">${a.required ? 'required' : 'optional'}</span></td>
+      <td class="attr-desc">${a.description}</td>
+      <td class="attr-example">${a.example || '—'}</td>
+    </tr>
+  `).join('');
+})();
+</script>
+</body>
+</html>
