@@ -268,6 +268,185 @@ body {
   border: 1px dashed var(--border);
   border-radius: var(--radius);
 }
+
+/* Signal tabs */
+.signal-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 0;
+  border-bottom: 2px solid var(--border);
+  padding-left: 4px;
+}
+
+.signal-tab {
+  padding: 10px 24px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: none;
+  border: 1px solid transparent;
+  border-bottom: none;
+  border-radius: 8px 8px 0 0;
+  transition: all 0.2s;
+  position: relative;
+  bottom: -2px;
+}
+
+.signal-tab:hover {
+  color: var(--text-primary);
+  background: var(--bg-tertiary);
+}
+
+.signal-tab.active {
+  color: var(--text-primary);
+  background: var(--bg-secondary);
+  border-color: var(--border);
+  border-bottom: 2px solid var(--bg-secondary);
+}
+
+.signal-tab.traces.active { color: var(--otel-orange); border-bottom-color: var(--otel-orange); }
+.signal-tab.metrics.active { color: var(--otel-teal); border-bottom-color: var(--otel-teal); }
+.signal-tab.logs.active { color: var(--otel-blue); border-bottom-color: var(--otel-blue); }
+
+.signal-tab .tab-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 6px;
+  vertical-align: middle;
+  opacity: 0.5;
+}
+
+.signal-tab.active .tab-dot { opacity: 1; }
+.signal-tab.traces .tab-dot { background: var(--otel-orange); }
+.signal-tab.metrics .tab-dot { background: var(--otel-teal); }
+.signal-tab.logs .tab-dot { background: var(--otel-blue); }
+
+/* Tab content area */
+.signal-content {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-top: none;
+  border-radius: 0 0 var(--radius) var(--radius);
+  padding: var(--spacing-md);
+  min-height: 200px;
+}
+
+.signal-pane { display: none; }
+.signal-pane.active { display: block; }
+
+/* Schema hierarchy */
+.schema-hierarchy {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: var(--spacing-md);
+  padding: var(--spacing-sm);
+  background: var(--bg-primary);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+}
+
+.schema-hierarchy .level {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+}
+
+.schema-hierarchy .level-arrow {
+  color: var(--text-muted);
+}
+
+.schema-hierarchy .level-name {
+  color: var(--otel-orange);
+  font-weight: 600;
+}
+
+.schema-hierarchy .level-desc {
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+/* Span fields table */
+.fields-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--font-mono);
+  font-size: 13px;
+}
+
+.fields-table th {
+  text-align: left;
+  padding: 8px 12px;
+  color: var(--text-secondary);
+  font-weight: 600;
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.fields-table td {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.fields-table .field-name { color: var(--otel-orange); font-weight: 500; }
+.fields-table .field-type { color: var(--otel-teal); }
+.fields-table .field-required {
+  display: inline-block;
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-weight: 600;
+}
+.fields-table .field-required.yes {
+  background: rgba(245, 168, 0, 0.15);
+  color: var(--otel-orange);
+}
+.fields-table .field-required.no {
+  background: rgba(139, 148, 158, 0.15);
+  color: var(--text-muted);
+}
+.fields-table .field-desc {
+  color: var(--text-secondary);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  max-width: 300px;
+}
+.fields-table .field-example {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+.fields-table .enum-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 4px;
+}
+.fields-table .enum-value {
+  display: inline-block;
+  font-size: 11px;
+  padding: 2px 8px;
+  background: rgba(66, 92, 199, 0.15);
+  color: var(--otel-teal-light);
+  border-radius: 4px;
+  font-family: var(--font-mono);
+}
+
+/* Coming soon placeholder */
+.coming-soon {
+  text-align: center;
+  padding: 48px 20px;
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+.coming-soon .cs-icon { font-size: 32px; margin-bottom: 12px; }
+.coming-soon .cs-text { font-family: var(--font-mono); }
 </style>
 </head>
 <body>
@@ -320,9 +499,52 @@ body {
     </table>
   </div>
 
-  <!-- Placeholder for future slices -->
-  <div class="placeholder-tabs">
-    Signal schemas (Traces / Metrics / Logs) · Pipeline flow · Where Cribl Fits — coming in subsequent slices
+  <!-- Signal Schema Section -->
+  <div class="section-card" style="padding: 0; overflow: hidden;">
+    <div style="padding: var(--spacing-md); border-bottom: 1px solid var(--border);">
+      <h2 style="margin-bottom: 0;"><span class="icon-dot traces"></span>Signal Schemas</h2>
+    </div>
+    <div class="signal-tabs">
+      <button class="signal-tab traces active" data-signal="traces"><span class="tab-dot"></span>Traces</button>
+      <button class="signal-tab metrics" data-signal="metrics"><span class="tab-dot"></span>Metrics</button>
+      <button class="signal-tab logs" data-signal="logs"><span class="tab-dot"></span>Logs</button>
+    </div>
+    <div class="signal-content">
+      <!-- Traces pane -->
+      <div class="signal-pane active" id="pane-traces">
+        <div class="schema-hierarchy">
+          <div class="level"><span class="level-name">Resource</span><span class="level-desc">— describes the service/host producing telemetry</span></div>
+          <div class="level"><span class="level-arrow">→</span><span class="level-name">InstrumentationScope</span><span class="level-desc">— identifies the instrumentation library</span></div>
+          <div class="level"><span class="level-arrow">→</span><span class="level-name">Span</span><span class="level-desc">— a unit of work in a distributed trace</span></div>
+        </div>
+        <table class="fields-table" id="span-fields-table">
+          <thead>
+            <tr>
+              <th>Field</th>
+              <th>Type</th>
+              <th>Req</th>
+              <th>Description</th>
+              <th>Example</th>
+            </tr>
+          </thead>
+          <tbody id="span-fields-body"></tbody>
+        </table>
+      </div>
+      <!-- Metrics pane (placeholder) -->
+      <div class="signal-pane" id="pane-metrics">
+        <div class="coming-soon">
+          <div class="cs-icon">📊</div>
+          <div class="cs-text">Metrics schema — coming in Slice 4</div>
+        </div>
+      </div>
+      <!-- Logs pane (placeholder) -->
+      <div class="signal-pane" id="pane-logs">
+        <div class="coming-soon">
+          <div class="cs-icon">📋</div>
+          <div class="cs-text">Logs schema — coming in Slice 4</div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- Footer -->
@@ -362,6 +584,43 @@ body {
       <td class="attr-example">${a.example || '—'}</td>
     </tr>
   `).join('');
+})();
+
+// Render span fields table
+(function renderSpanFields() {
+  const tbody = document.getElementById('span-fields-body');
+  if (!tbody) return;
+  const fields = getSpanFields();
+  tbody.innerHTML = fields.map(f => {
+    let typeCell = f.type;
+    if (f.enumValues) {
+      typeCell += '<div class="enum-list">' + f.enumValues.map(v => `<span class="enum-value">${v}</span>`).join('') + '</div>`;
+    }
+    return `
+    <tr>
+      <td class="field-name">${f.name}</td>
+      <td class="field-type">${typeCell}</td>
+      <td><span class="field-required ${f.required ? 'yes' : 'no'}">${f.required ? 'req' : 'opt'}</span></td>
+      <td class="field-desc">${f.description}</td>
+      <td class="field-example">${f.example || '—'}</td>
+    </tr>`;
+  }).join('');
+})();
+
+// Signal tab switcher
+(function setupSignalTabs() {
+  const tabs = document.querySelectorAll('.signal-tab');
+  const panes = document.querySelectorAll('.signal-pane');
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      const signal = tab.dataset.signal;
+      tabs.forEach(t => t.classList.remove('active'));
+      panes.forEach(p => p.classList.remove('active'));
+      tab.classList.add('active');
+      const pane = document.getElementById('pane-' + signal);
+      if (pane) pane.classList.add('active');
+    });
+  });
 })();
 </script>
 </body>
