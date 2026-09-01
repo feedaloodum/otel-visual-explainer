@@ -447,6 +447,165 @@ body {
 
 .coming-soon .cs-icon { font-size: 32px; margin-bottom: 12px; }
 .coming-soon .cs-text { font-family: var(--font-mono); }
+
+/* Trace tree */
+.trace-tree-section {
+  margin-bottom: var(--spacing-md);
+}
+
+.trace-tree-header {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+  font-family: var(--font-mono);
+}
+
+.trace-tree {
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: var(--spacing-sm);
+  font-family: var(--font-mono);
+  font-size: 13px;
+}
+
+.trace-node {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin: 2px 0;
+}
+
+.trace-node:hover {
+  background: var(--bg-tertiary);
+}
+
+.trace-node.selected {
+  background: rgba(245, 168, 0, 0.15);
+  border: 1px solid var(--otel-orange);
+}
+
+.trace-node.related-parent {
+  border-left: 3px solid var(--otel-teal);
+  background: rgba(66, 92, 199, 0.08);
+}
+
+.trace-node.related-child {
+  border-left: 3px solid var(--otel-blue);
+  background: rgba(66, 133, 244, 0.08);
+}
+
+.trace-node .node-icon {
+  font-size: 12px;
+  width: 16px;
+  text-align: center;
+}
+
+.trace-node .node-kind {
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(245, 168, 0, 0.15);
+  color: var(--otel-orange);
+  font-weight: 600;
+}
+
+.trace-node .node-name {
+  color: var(--text-primary);
+}
+
+.trace-node .node-id {
+  color: var(--text-muted);
+  font-size: 11px;
+  margin-left: auto;
+}
+
+/* Schema inspector panel */
+.schema-inspector {
+  position: fixed;
+  top: 60px;
+  right: 20px;
+  width: 320px;
+  max-height: 400px;
+  overflow-y: auto;
+  background: var(--bg-secondary);
+  border: 1px solid var(--otel-orange);
+  border-radius: var(--radius);
+  padding: var(--spacing-sm);
+  font-size: 13px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  display: none;
+  z-index: 100;
+}
+
+.schema-inspector.visible {
+  display: block;
+}
+
+.schema-inspector .inspector-header {
+  font-size: 12px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.schema-inspector .inspector-close {
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: 16px;
+  line-height: 1;
+}
+
+.schema-inspector .inspector-close:hover {
+  color: var(--text-primary);
+}
+
+.schema-inspector .insp-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.schema-inspector .insp-label {
+  color: var(--text-muted);
+  font-size: 12px;
+  min-width: 70px;
+}
+
+.schema-inspector .insp-value {
+  color: var(--text-primary);
+  font-size: 13px;
+}
+
+.schema-inspector .insp-value.type { color: var(--otel-teal); font-family: var(--font-mono); }
+.schema-inspector .insp-value.required-yes { color: var(--otel-orange); }
+.schema-inspector .insp-value.required-no { color: var(--text-muted); }
+
+.schema-inspector .insp-enum-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.schema-inspector .insp-enum-value {
+  font-size: 11px;
+  padding: 2px 8px;
+  background: rgba(66, 92, 199, 0.15);
+  color: var(--otel-teal-light);
+  border-radius: 4px;
+  font-family: var(--font-mono);
+}
 </style>
 </head>
 <body>
@@ -517,6 +676,10 @@ body {
           <div class="level"><span class="level-arrow">→</span><span class="level-name">InstrumentationScope</span><span class="level-desc">— identifies the instrumentation library</span></div>
           <div class="level"><span class="level-arrow">→</span><span class="level-name">Span</span><span class="level-desc">— a unit of work in a distributed trace</span></div>
         </div>
+        <div class="trace-tree-section">
+          <div class="trace-tree-header">Sample Trace Tree — click a span to highlight relationships</div>
+          <div class="trace-tree" id="trace-tree"></div>
+        </div>
         <table class="fields-table" id="span-fields-table">
           <thead>
             <tr>
@@ -551,6 +714,15 @@ body {
   <div class="footer">
     OpenTelemetry Visual Explainer · self-contained · works offline · <a href="https://opentelemetry.io">opentelemetry.io</a>
   </div>
+</div>
+
+<!-- Schema Inspector Panel -->
+<div class="schema-inspector" id="schema-inspector">
+  <div class="inspector-header">
+    <span>Field Inspector</span>
+    <span class="inspector-close" id="inspector-close">✕</span>
+  </div>
+  <div id="inspector-content"></div>
 </div>
 
 <script src="otel-logic.js"></script>
@@ -621,6 +793,118 @@ body {
       if (pane) pane.classList.add('active');
     });
   });
+})();
+
+// Render trace tree
+(function renderTraceTree() {
+  const container = document.getElementById('trace-tree');
+  if (!container) return;
+
+  const spans = [
+    { id: 'span-a', name: 'GET /api/checkout', kind: 'SERVER', depth: 0 },
+    { id: 'span-b', name: 'process_payment', kind: 'INTERNAL', depth: 1 },
+    { id: 'span-c', name: 'DB query: user lookup', kind: 'CLIENT', depth: 1 },
+    { id: 'span-d', name: 'charge_card', kind: 'CLIENT', depth: 2 }
+  ];
+
+  const icons = { SERVER: '🌐', CLIENT: '📤', INTERNAL: '⚙', PRODUCER: '📨', CONSUMER: '📥' };
+
+  container.innerHTML = spans.map(s => {
+    const indent = '  '.repeat(s.depth);
+    return `<div class="trace-node" data-span-id="${s.id}" style="padding-left: ${8 + s.depth * 20}px">
+      <span class="node-icon">${icons[s.kind] || '•'}</span>
+      <span class="node-kind">${s.kind}</span>
+      <span class="node-name">${indent}${s.name}</span>
+      <span class="node-id">${s.id}</span>
+    </div>`;
+  }).join('');
+
+  // Click handler for span relationship highlighting
+  container.addEventListener('click', (e) => {
+    const node = e.target.closest('.trace-node');
+    if (!node) return;
+    const spanId = node.dataset.spanId;
+    const rels = getSpanRelationships(spanId);
+    if (!rels) return;
+
+    // Clear previous highlights
+    container.querySelectorAll('.trace-node').forEach(n => {
+      n.classList.remove('selected', 'related-parent', 'related-child');
+    });
+
+    // Highlight selected span
+    node.classList.add('selected');
+
+    // Highlight parent
+    if (rels.parent) {
+      const parentEl = container.querySelector(`[data-span-id="${rels.parent}"]`);
+      if (parentEl) parentEl.classList.add('related-parent');
+    }
+
+    // Highlight children
+    rels.children.forEach(childId => {
+      const childEl = container.querySelector(`[data-span-id="${childId}"]`);
+      if (childEl) childEl.classList.add('related-child');
+    });
+  });
+})();
+
+// Schema inspector hover on span fields
+(function setupSchemaInspector() {
+  const inspector = document.getElementById('schema-inspector');
+  const inspectorContent = document.getElementById('inspector-content');
+  const inspectorClose = document.getElementById('inspector-close');
+  if (!inspector || !inspectorContent) return;
+
+  function showInspector(field) {
+    let enumHtml = '';
+    if (field.enumValues) {
+      enumHtml = `<div class="insp-row">
+        <span class="insp-label">Enum</span>
+        <div class="insp-enum-list">${field.enumValues.map(v => `<span class="insp-enum-value">${v}</span>`).join('')}</div>
+      </div>`;
+    }
+    inspectorContent.innerHTML = `
+      <div class="insp-row">
+        <span class="insp-label">Name</span>
+        <span class="insp-value" style="color: var(--otel-orange); font-family: var(--font-mono);">${field.name}</span>
+      </div>
+      <div class="insp-row">
+        <span class="insp-label">Type</span>
+        <span class="insp-value type">${field.type}</span>
+      </div>
+      <div class="insp-row">
+        <span class="insp-label">Required</span>
+        <span class="insp-value required-${field.required ? 'yes' : 'no'}">${field.required ? 'yes' : 'no'}</span>
+      </div>
+      <div class="insp-row">
+        <span class="insp-label">Description</span>
+        <span class="insp-value" style="font-family: var(--font-sans); font-size: 12px; line-height: 1.5;">${field.description}</span>
+      </div>
+      <div class="insp-row">
+        <span class="insp-label">Example</span>
+        <span class="insp-value" style="color: var(--text-muted); font-size: 12px;">${field.example || '—'}</span>
+      </div>
+      ${enumHtml}
+    `;
+    inspector.classList.add('visible');
+  }
+
+  function hideInspector() {
+    inspector.classList.remove('visible');
+  }
+
+  // Hover on span field rows
+  document.addEventListener('mouseover', (e) => {
+    const row = e.target.closest('#span-fields-body tr');
+    if (!row) return;
+    const fieldName = row.querySelector('.field-name');
+    if (!fieldName) return;
+    const field = getFieldMetadata('traces', fieldName.textContent);
+    if (field) showInspector(field);
+  });
+
+  inspectorClose.addEventListener('click', hideInspector);
 })();
 </script>
 </body>

@@ -198,13 +198,42 @@ function getSpanFields() {
   return spanFields;
 }
 
+// Sample trace tree for relationship highlighting
+// span-a (root) → span-b, span-c (children of a) → span-d (child of b)
+const spanTree = {
+  'span-a': { parent: null, children: ['span-b', 'span-c'], name: 'GET /api/checkout', kind: 'SERVER' },
+  'span-b': { parent: 'span-a', children: ['span-d'], name: 'process_payment', kind: 'INTERNAL' },
+  'span-c': { parent: 'span-a', children: [], name: 'DB query: user lookup', kind: 'CLIENT' },
+  'span-d': { parent: 'span-b', children: [], name: 'charge_card', kind: 'CLIENT' }
+};
+
+function getFieldMetadata(signalType, fieldId) {
+  if (signalType === 'traces') {
+    const field = spanFields.find(f => f.name === fieldId);
+    return field || null;
+  }
+  // metrics and logs schemas added in Slice 4
+  return null;
+}
+
+function getSpanRelationships(spanId) {
+  const span = spanTree[spanId];
+  if (!span) return null;
+  return {
+    parent: span.parent,
+    children: span.children
+  };
+}
+
 // Export for Node.js (test.js), expose globally for browser (<script>)
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { getResourceAttributes, getSignalTypes, getTraceSchema, getSpanFields };
+  module.exports = { getResourceAttributes, getSignalTypes, getTraceSchema, getSpanFields, getFieldMetadata, getSpanRelationships };
 }
 if (typeof window !== 'undefined') {
   window.getResourceAttributes = getResourceAttributes;
   window.getSignalTypes = getSignalTypes;
   window.getTraceSchema = getTraceSchema;
   window.getSpanFields = getSpanFields;
+  window.getFieldMetadata = getFieldMetadata;
+  window.getSpanRelationships = getSpanRelationships;
 }

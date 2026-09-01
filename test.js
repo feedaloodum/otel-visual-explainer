@@ -1,5 +1,5 @@
 const assert = require('assert');
-const { getResourceAttributes, getSignalTypes, getTraceSchema, getSpanFields } = require('./otel-logic.js');
+const { getResourceAttributes, getSignalTypes, getTraceSchema, getSpanFields, getFieldMetadata, getSpanRelationships } = require('./otel-logic.js');
 
 // Test runner
 let passed = 0;
@@ -208,6 +208,62 @@ test('each field has name, type, description, required', () => {
 test('returns at least 10 span fields', () => {
   const result = getSpanFields();
   assert.ok(result.length >= 10, `expected >= 10 fields, got ${result.length}`);
+});
+
+// --- getFieldMetadata ---
+console.log('getFieldMetadata:');
+
+test('returns metadata for traces.traceId', () => {
+  const result = getFieldMetadata('traces', 'traceId');
+  assert.ok(result, 'should return a result');
+  assert.strictEqual(result.name, 'traceId');
+  assert.ok('type' in result, 'should have type');
+  assert.ok('description' in result, 'should have description');
+});
+
+test('returns metadata for traces.kind with enumValues', () => {
+  const result = getFieldMetadata('traces', 'kind');
+  assert.ok(result, 'should return a result');
+  assert.ok('enumValues' in result, 'should have enumValues');
+  assert.ok(result.enumValues.includes('SERVER'), 'should include SERVER');
+});
+
+test('returns null for unknown field', () => {
+  const result = getFieldMetadata('traces', 'nonexistent');
+  assert.strictEqual(result, null, 'should return null for unknown field');
+});
+
+test('returns null for unknown signal type', () => {
+  const result = getFieldMetadata('unknown', 'traceId');
+  assert.strictEqual(result, null, 'should return null for unknown signal');
+});
+
+// --- getSpanRelationships ---
+console.log('getSpanRelationships:');
+
+test('returns parent and children for a span', () => {
+  const result = getSpanRelationships('span-b');
+  assert.ok(result, 'should return a result');
+  assert.ok('parent' in result, 'should have parent');
+  assert.ok('children' in result, 'should have children');
+  assert.ok(Array.isArray(result.children), 'children should be array');
+});
+
+test('root span has null parent', () => {
+  const result = getSpanRelationships('span-a');
+  assert.strictEqual(result.parent, null, 'root span should have null parent');
+  assert.ok(result.children.length > 0, 'root span should have children');
+});
+
+test('leaf span has empty children', () => {
+  const result = getSpanRelationships('span-d');
+  assert.ok(result.parent, 'leaf span should have a parent');
+  assert.strictEqual(result.children.length, 0, 'leaf span should have no children');
+});
+
+test('returns null for unknown span', () => {
+  const result = getSpanRelationships('nonexistent');
+  assert.strictEqual(result, null, 'should return null for unknown span');
 });
 
 // --- Summary ---
