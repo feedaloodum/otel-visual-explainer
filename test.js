@@ -1,5 +1,5 @@
 const assert = require('assert');
-const { getResourceAttributes, getSignalTypes, getTraceSchema, getSpanFields, getFieldMetadata, getSpanRelationships } = require('./otel-logic.js');
+const { getResourceAttributes, getSignalTypes, getTraceSchema, getSpanFields, getFieldMetadata, getSpanRelationships, getMetricFields, getLogFields } = require('./otel-logic.js');
 
 // Test runner
 let passed = 0;
@@ -264,6 +264,205 @@ test('leaf span has empty children', () => {
 test('returns null for unknown span', () => {
   const result = getSpanRelationships('nonexistent');
   assert.strictEqual(result, null, 'should return null for unknown span');
+});
+
+// --- getMetricFields ---
+console.log('getMetricFields:');
+
+test('returns an array', () => {
+  const result = getMetricFields();
+  assert.ok(Array.isArray(result), 'should return an array');
+});
+
+test('includes Counter', () => {
+  const result = getMetricFields();
+  const found = result.find(m => m.name === 'Counter' || m.type === 'Counter');
+  assert.ok(found, 'Counter should be present');
+});
+
+test('includes Gauge', () => {
+  const result = getMetricFields();
+  const found = result.find(m => m.name === 'Gauge' || m.type === 'Gauge');
+  assert.ok(found, 'Gauge should be present');
+});
+
+test('includes Histogram', () => {
+  const result = getMetricFields();
+  const found = result.find(m => m.name === 'Histogram' || m.type === 'Histogram');
+  assert.ok(found, 'Histogram should be present');
+});
+
+test('includes Exponential Histogram', () => {
+  const result = getMetricFields();
+  const found = result.find(m => m.name === 'Exponential Histogram' || m.type === 'Exponential Histogram' || m.name === 'ExponentialHistogram' || m.type === 'ExponentialHistogram');
+  assert.ok(found, 'Exponential Histogram should be present');
+});
+
+test('includes Summary', () => {
+  const result = getMetricFields();
+  const found = result.find(m => m.name === 'Summary' || m.type === 'Summary');
+  assert.ok(found, 'Summary should be present');
+});
+
+test('returns at least 5 metric types', () => {
+  const result = getMetricFields();
+  assert.ok(result.length >= 5, `expected >= 5 metric types, got ${result.length}`);
+});
+
+test('each metric type has name, type, description, required, fields', () => {
+  const result = getMetricFields();
+  for (const m of result) {
+    assert.ok('name' in m, `${JSON.stringify(m)} missing name`);
+    assert.ok('type' in m, `${m.name} missing type`);
+    assert.ok('description' in m, `${m.name} missing description`);
+    assert.ok('required' in m, `${m.name} missing required`);
+    assert.ok('fields' in m, `${m.name} missing fields`);
+    assert.ok(Array.isArray(m.fields), `${m.name} fields should be an array`);
+  }
+});
+
+test('each metric sub-field has name, type, description, required', () => {
+  const result = getMetricFields();
+  for (const m of result) {
+    for (const f of m.fields) {
+      assert.ok('name' in f, `${m.name}.${JSON.stringify(f)} missing name`);
+      assert.ok('type' in f, `${m.name}.${f.name} missing type`);
+      assert.ok('description' in f, `${m.name}.${f.name} missing description`);
+      assert.ok('required' in f, `${m.name}.${f.name} missing required`);
+    }
+  }
+});
+
+test('each metric type has timestamp field', () => {
+  const result = getMetricFields();
+  for (const m of result) {
+    const ts = m.fields.find(f => f.name === 'timestamp' || f.name === 'timeUnixNano' || f.name === 'startTimeUnixNano');
+    assert.ok(ts, `${m.name} should have a timestamp field`);
+  }
+});
+
+test('each metric type has attributes field', () => {
+  const result = getMetricFields();
+  for (const m of result) {
+    const attr = m.fields.find(f => f.name === 'attributes');
+    assert.ok(attr, `${m.name} should have an attributes field`);
+  }
+});
+
+// --- getLogFields ---
+console.log('getLogFields:');
+
+test('returns an array', () => {
+  const result = getLogFields();
+  assert.ok(Array.isArray(result), 'should return an array');
+});
+
+test('includes timestamp', () => {
+  const result = getLogFields();
+  const found = result.find(f => f.name === 'timestamp');
+  assert.ok(found, 'timestamp should be present');
+});
+
+test('includes observedTimeUnixNano', () => {
+  const result = getLogFields();
+  const found = result.find(f => f.name === 'observedTimeUnixNano');
+  assert.ok(found, 'observedTimeUnixNano should be present');
+});
+
+test('includes severityNumber', () => {
+  const result = getLogFields();
+  const found = result.find(f => f.name === 'severityNumber');
+  assert.ok(found, 'severityNumber should be present');
+});
+
+test('includes severityText', () => {
+  const result = getLogFields();
+  const found = result.find(f => f.name === 'severityText');
+  assert.ok(found, 'severityText should be present');
+});
+
+test('includes body', () => {
+  const result = getLogFields();
+  const found = result.find(f => f.name === 'body');
+  assert.ok(found, 'body should be present');
+});
+
+test('includes attributes', () => {
+  const result = getLogFields();
+  const found = result.find(f => f.name === 'attributes');
+  assert.ok(found, 'attributes should be present');
+});
+
+test('includes traceId', () => {
+  const result = getLogFields();
+  const found = result.find(f => f.name === 'traceId');
+  assert.ok(found, 'traceId should be present');
+});
+
+test('includes spanId', () => {
+  const result = getLogFields();
+  const found = result.find(f => f.name === 'spanId');
+  assert.ok(found, 'spanId should be present');
+});
+
+test('includes flags', () => {
+  const result = getLogFields();
+  const found = result.find(f => f.name === 'flags');
+  assert.ok(found, 'flags should be present');
+});
+
+test('each field has name, type, description, required', () => {
+  const result = getLogFields();
+  for (const f of result) {
+    assert.ok('name' in f, `${JSON.stringify(f)} missing name`);
+    assert.ok('type' in f, `${f.name} missing type`);
+    assert.ok('description' in f, `${f.name} missing description`);
+    assert.ok('required' in f, `${f.name} missing required`);
+  }
+});
+
+test('returns at least 9 log fields', () => {
+  const result = getLogFields();
+  assert.ok(result.length >= 9, `expected >= 9 fields, got ${result.length}`);
+});
+
+// --- getFieldMetadata (metrics and logs) ---
+console.log('getFieldMetadata (metrics/logs):');
+
+test('returns metadata for metrics field', () => {
+  const result = getFieldMetadata('metrics', 'attributes');
+  assert.ok(result, 'should return a result for metrics.attributes');
+  assert.strictEqual(result.name, 'attributes');
+});
+
+test('returns null for unknown metrics field', () => {
+  const result = getFieldMetadata('metrics', 'nonexistent');
+  assert.strictEqual(result, null, 'should return null for unknown metrics field');
+});
+
+test('returns metadata for logs field traceId', () => {
+  const result = getFieldMetadata('logs', 'traceId');
+  assert.ok(result, 'should return a result for logs.traceId');
+  assert.strictEqual(result.name, 'traceId');
+  assert.ok('type' in result, 'should have type');
+  assert.ok('description' in result, 'should have description');
+});
+
+test('returns metadata for logs field severityNumber', () => {
+  const result = getFieldMetadata('logs', 'severityNumber');
+  assert.ok(result, 'should return a result for logs.severityNumber');
+  assert.strictEqual(result.name, 'severityNumber');
+});
+
+test('returns null for unknown logs field', () => {
+  const result = getFieldMetadata('logs', 'nonexistent');
+  assert.strictEqual(result, null, 'should return null for unknown logs field');
+});
+
+test('still returns metadata for traces.traceId (unchanged)', () => {
+  const result = getFieldMetadata('traces', 'traceId');
+  assert.ok(result, 'should return a result for traces.traceId');
+  assert.strictEqual(result.name, 'traceId');
 });
 
 // --- Summary ---

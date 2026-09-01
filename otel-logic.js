@@ -207,12 +207,172 @@ const spanTree = {
   'span-d': { parent: 'span-b', children: [], name: 'charge_card', kind: 'CLIENT' }
 };
 
+// Metric instrument types with their data point fields
+const metricTypes = [
+  {
+    name: 'Counter',
+    type: 'Counter',
+    description: 'A monotonically increasing counter for cumulative values (e.g., total requests served). Never decreases.',
+    required: true,
+    fields: [
+      { name: 'startTimeUnixNano', type: 'uint64', description: 'Start of the aggregation period in Unix nanoseconds.', required: true },
+      { name: 'timeUnixNano', type: 'uint64', description: 'Timestamp of the data point in Unix nanoseconds.', required: true },
+      { name: 'value', type: 'double', description: 'The current cumulative counter value.', required: true },
+      { name: 'attributes', type: 'KeyValue[]', description: 'Key-value pairs describing the dimensions of this data point.', required: false }
+    ]
+  },
+  {
+    name: 'Gauge',
+    type: 'Gauge',
+    description: 'An instantaneous measurement that can increase or decrease (e.g., current memory usage, queue depth).',
+    required: true,
+    fields: [
+      { name: 'timeUnixNano', type: 'uint64', description: 'Timestamp of the measurement in Unix nanoseconds.', required: true },
+      { name: 'value', type: 'double', description: 'The current gauge value at this point in time.', required: true },
+      { name: 'startTimeUnixNano', type: 'uint64', description: 'Optional start time for the gauge reading.', required: false },
+      { name: 'attributes', type: 'KeyValue[]', description: 'Key-value pairs describing the dimensions of this data point.', required: false }
+    ]
+  },
+  {
+    name: 'Histogram',
+    type: 'Histogram',
+    description: 'A distribution of values in explicit buckets (e.g., request latency distribution). Includes count, sum, and bucket boundaries.',
+    required: true,
+    fields: [
+      { name: 'startTimeUnixNano', type: 'uint64', description: 'Start of the aggregation period in Unix nanoseconds.', required: true },
+      { name: 'timeUnixNano', type: 'uint64', description: 'Timestamp of the data point in Unix nanoseconds.', required: true },
+      { name: 'count', type: 'uint64', description: 'Number of values in the population.', required: true },
+      { name: 'sum', type: 'double', description: 'Sum of all values in the population.', required: false },
+      { name: 'buckets', type: 'explicitBuckets', description: 'Explicit bucket boundaries and counts. Each bucket is a boundary + cumulative count pair.', required: true },
+      { name: 'attributes', type: 'KeyValue[]', description: 'Key-value pairs describing the dimensions of this data point.', required: false }
+    ]
+  },
+  {
+    name: 'Exponential Histogram',
+    type: 'ExponentialHistogram',
+    description: 'A distribution of values in exponential/log-scale buckets (base-2 growth). More compact than explicit buckets for wide-ranging data.',
+    required: true,
+    fields: [
+      { name: 'startTimeUnixNano', type: 'uint64', description: 'Start of the aggregation period in Unix nanoseconds.', required: true },
+      { name: 'timeUnixNano', type: 'uint64', description: 'Timestamp of the data point in Unix nanoseconds.', required: true },
+      { name: 'count', type: 'uint64', description: 'Number of values in the population.', required: true },
+      { name: 'sum', type: 'double', description: 'Sum of all values in the population.', required: false },
+      { name: 'scale', type: 'int32', description: 'Scale of the exponential bucket mapping. Higher scale = finer resolution.', required: true },
+      { name: 'zeroCount', type: 'uint64', description: 'Number of values exactly equal to zero.', required: false },
+      { name: 'positiveBuckets', type: 'Buckets', description: 'Bucket counts for positive values (offset + counts array).', required: true },
+      { name: 'negativeBuckets', type: 'Buckets', description: 'Bucket counts for negative values (offset + counts array).', required: false },
+      { name: 'attributes', type: 'KeyValue[]', description: 'Key-value pairs describing the dimensions of this data point.', required: false }
+    ]
+  },
+  {
+    name: 'Summary',
+    type: 'Summary',
+    description: 'A pre-computed distribution with quantiles (e.g., p50, p95, p99 latency). The source computes quantiles, not the collector.',
+    required: true,
+    fields: [
+      { name: 'startTimeUnixNano', type: 'uint64', description: 'Start of the aggregation period in Unix nanoseconds.', required: true },
+      { name: 'timeUnixNano', type: 'uint64', description: 'Timestamp of the data point in Unix nanoseconds.', required: true },
+      { name: 'count', type: 'uint64', description: 'Number of values in the population.', required: true },
+      { name: 'sum', type: 'double', description: 'Sum of all values in the population.', required: true },
+      { name: 'quantileValues', type: 'QuantileValue[]', description: 'Pre-computed quantile results, each with quantile (0..1), value, and optional flags.', required: true },
+      { name: 'attributes', type: 'KeyValue[]', description: 'Key-value pairs describing the dimensions of this data point.', required: false }
+    ]
+  }
+];
+
+function getMetricFields() {
+  return metricTypes;
+}
+
+// LogRecord fields
+const logFields = [
+  {
+    name: 'timestamp',
+    type: 'uint64',
+    description: 'The time the event occurred, in Unix nanoseconds. This is the event time, not the collection time.',
+    required: false,
+    example: '1700000000000000000'
+  },
+  {
+    name: 'observedTimeUnixNano',
+    type: 'uint64',
+    description: 'The time the log record was observed/collected by the SDK, in Unix nanoseconds. May differ from timestamp if the event was delayed.',
+    required: false,
+    example: '1700000000100000000'
+  },
+  {
+    name: 'severityNumber',
+    type: 'int32',
+    description: 'Numeric severity level following the OpenTelemetry severity scale (1=TRACE to 24=FATAL). Enables severity-based filtering and alerting.',
+    required: false,
+    example: '9'
+  },
+  {
+    name: 'severityText',
+    type: 'string',
+    description: 'Human-readable severity string (e.g., INFO, WARN, ERROR). Maps to severityNumber but is the original text from the log source.',
+    required: false,
+    example: 'ERROR'
+  },
+  {
+    name: 'body',
+    type: 'AnyValue',
+    description: 'The primary log message or payload. Can be a string, number, boolean, or nested structure.',
+    required: false,
+    example: 'Connection refused to database host db-1.prod'
+  },
+  {
+    name: 'attributes',
+    type: 'KeyValue[]',
+    description: 'Key-value pairs providing context for the log record (e.g., request.id, user.id, error.code).',
+    required: false,
+    example: 'error.code=ECONNREFUSED, db.system=postgresql'
+  },
+  {
+    name: 'traceId',
+    type: 'bytes (16)',
+    description: '🔗 Trace correlation — the trace ID this log belongs to. Lets you jump from a log line to the corresponding trace in the trace viewer.',
+    required: false,
+    example: '0af7651916cd43dd8448eb211c80319c'
+  },
+  {
+    name: 'spanId',
+    type: 'bytes (8)',
+    description: '🔗 Trace correlation — the span ID within the trace that produced this log. Pinpoints exactly which span the log came from.',
+    required: false,
+    example: 'b7ad6b7169203331'
+  },
+  {
+    name: 'flags',
+    type: 'uint32',
+    description: 'Trace flags. Bit 1 indicates whether the associated trace was sampled. Same field as span flags for cross-signal correlation.',
+    required: false,
+    example: '1'
+  }
+];
+
+function getLogFields() {
+  return logFields;
+}
+
 function getFieldMetadata(signalType, fieldId) {
   if (signalType === 'traces') {
     const field = spanFields.find(f => f.name === fieldId);
     return field || null;
   }
-  // metrics and logs schemas added in Slice 4
+  if (signalType === 'metrics') {
+    // Search across all metric instrument types and their sub-fields
+    for (const metric of metricTypes) {
+      if (metric.name === fieldId || metric.type === fieldId) return metric;
+      const field = metric.fields.find(f => f.name === fieldId);
+      if (field) return field;
+    }
+    return null;
+  }
+  if (signalType === 'logs') {
+    const field = logFields.find(f => f.name === fieldId);
+    return field || null;
+  }
   return null;
 }
 
@@ -227,7 +387,7 @@ function getSpanRelationships(spanId) {
 
 // Export for Node.js (test.js), expose globally for browser (<script>)
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { getResourceAttributes, getSignalTypes, getTraceSchema, getSpanFields, getFieldMetadata, getSpanRelationships };
+  module.exports = { getResourceAttributes, getSignalTypes, getTraceSchema, getSpanFields, getFieldMetadata, getSpanRelationships, getMetricFields, getLogFields };
 }
 if (typeof window !== 'undefined') {
   window.getResourceAttributes = getResourceAttributes;
@@ -236,4 +396,6 @@ if (typeof window !== 'undefined') {
   window.getSpanFields = getSpanFields;
   window.getFieldMetadata = getFieldMetadata;
   window.getSpanRelationships = getSpanRelationships;
+  window.getMetricFields = getMetricFields;
+  window.getLogFields = getLogFields;
 }

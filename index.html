@@ -370,6 +370,29 @@ body {
   font-size: 12px;
 }
 
+.schema-hierarchy .level-name.metrics { color: var(--otel-teal); }
+.schema-hierarchy .level-name.logs { color: var(--otel-blue); }
+
+/* Trace correlation fields in log fields table */
+.fields-table .field-name.trace-correlation {
+  color: var(--otel-orange);
+}
+.fields-table .trace-link-icon {
+  margin-right: 4px;
+  font-size: 12px;
+}
+.fields-table .trace-correlation-badge {
+  display: inline-block;
+  font-size: 9px;
+  padding: 1px 6px;
+  background: rgba(245, 168, 0, 0.15);
+  color: var(--otel-orange);
+  border-radius: 8px;
+  margin-left: 6px;
+  font-family: var(--font-mono);
+  font-weight: 600;
+}
+
 /* Span fields table */
 .fields-table {
   width: 100%;
@@ -693,19 +716,45 @@ body {
           <tbody id="span-fields-body"></tbody>
         </table>
       </div>
-      <!-- Metrics pane (placeholder) -->
+      <!-- Metrics pane -->
       <div class="signal-pane" id="pane-metrics">
-        <div class="coming-soon">
-          <div class="cs-icon">📊</div>
-          <div class="cs-text">Metrics schema — coming in Slice 4</div>
+        <div class="schema-hierarchy metrics-hierarchy">
+          <div class="level"><span class="level-name metrics">Resource</span><span class="level-desc">— describes the service/host producing telemetry</span></div>
+          <div class="level"><span class="level-arrow">→</span><span class="level-name metrics">InstrumentationScope</span><span class="level-desc">— identifies the instrumentation library</span></div>
+          <div class="level"><span class="level-arrow">→</span><span class="level-name metrics">Metric</span><span class="level-desc">— an instrument (Counter, Gauge, Histogram…) with data points</span></div>
         </div>
+        <table class="fields-table" id="metric-fields-table">
+          <thead>
+            <tr>
+              <th>Instrument</th>
+              <th>Type</th>
+              <th>Req</th>
+              <th>Description</th>
+              <th>Sub-Fields</th>
+            </tr>
+          </thead>
+          <tbody id="metric-fields-body"></tbody>
+        </table>
       </div>
-      <!-- Logs pane (placeholder) -->
+      <!-- Logs pane -->
       <div class="signal-pane" id="pane-logs">
-        <div class="coming-soon">
-          <div class="cs-icon">📋</div>
-          <div class="cs-text">Logs schema — coming in Slice 4</div>
+        <div class="schema-hierarchy logs-hierarchy">
+          <div class="level"><span class="level-name logs">Resource</span><span class="level-desc">— describes the service/host producing telemetry</span></div>
+          <div class="level"><span class="level-arrow">→</span><span class="level-name logs">InstrumentationScope</span><span class="level-desc">— identifies the instrumentation library</span></div>
+          <div class="level"><span class="level-arrow">→</span><span class="level-name logs">LogRecord</span><span class="level-desc">— a discrete event with timestamp, severity, and trace correlation</span></div>
         </div>
+        <table class="fields-table" id="log-fields-table">
+          <thead>
+            <tr>
+              <th>Field</th>
+              <th>Type</th>
+              <th>Req</th>
+              <th>Description</th>
+              <th>Example</th>
+            </tr>
+          </thead>
+          <tbody id="log-fields-body"></tbody>
+        </table>
       </div>
     </div>
   </div>
@@ -772,6 +821,49 @@ body {
     <tr>
       <td class="field-name">${f.name}</td>
       <td class="field-type">${typeCell}</td>
+      <td><span class="field-required ${f.required ? 'yes' : 'no'}">${f.required ? 'req' : 'opt'}</span></td>
+      <td class="field-desc">${f.description}</td>
+      <td class="field-example">${f.example || '—'}</td>
+    </tr>`;
+  }).join('');
+})();
+
+// Render metric instrument types table
+(function renderMetricFields() {
+  const tbody = document.getElementById('metric-fields-body');
+  if (!tbody) return;
+  const metrics = getMetricFields();
+  tbody.innerHTML = metrics.map(m => {
+    const subFieldsHtml = m.fields.map(f => {
+      const req = f.required ? '<span class="field-required yes">req</span>' : '<span class="field-required no">opt</span>';
+      return `<div style="margin-bottom: 6px;"><span class="field-name" style="color: var(--otel-teal);">${f.name}</span> <span class="field-type">${f.type}</span> ${req}<br><span class="field-desc" style="font-size: 11px;">${f.description}</span></div>`;
+    }).join('');
+    return `
+    <tr>
+      <td class="field-name" style="color: var(--otel-teal); font-weight: 500;">${m.name}</td>
+      <td class="field-type">${m.type}</td>
+      <td><span class="field-required ${m.required ? 'yes' : 'no'}">${m.required ? 'req' : 'opt'}</span></td>
+      <td class="field-desc">${m.description}</td>
+      <td style="font-family: var(--font-sans); font-size: 12px; line-height: 1.5; max-width: 350px;">${subFieldsHtml}</td>
+    </tr>`;
+  }).join('');
+})();
+
+// Render log fields table
+(function renderLogFields() {
+  const tbody = document.getElementById('log-fields-body');
+  if (!tbody) return;
+  const fields = getLogFields();
+  const traceFields = ['traceId', 'spanId'];
+  tbody.innerHTML = fields.map(f => {
+    const isTraceCorrelation = traceFields.includes(f.name);
+    const nameCell = isTraceCorrelation
+      ? `<td class="field-name trace-correlation"><span class="trace-link-icon">🔗</span>${f.name}<span class="trace-correlation-badge">trace</span></td>`
+      : `<td class="field-name">${f.name}</td>`;
+    return `
+    <tr>
+      ${nameCell}
+      <td class="field-type">${f.type}</td>
       <td><span class="field-required ${f.required ? 'yes' : 'no'}">${f.required ? 'req' : 'opt'}</span></td>
       <td class="field-desc">${f.description}</td>
       <td class="field-example">${f.example || '—'}</td>
@@ -894,13 +986,21 @@ body {
     inspector.classList.remove('visible');
   }
 
-  // Hover on span field rows
+  // Hover on span field rows (traces, metrics, logs)
   document.addEventListener('mouseover', (e) => {
-    const row = e.target.closest('#span-fields-body tr');
+    const row = e.target.closest('#span-fields-body tr, #metric-fields-body tr, #log-fields-body tr');
     if (!row) return;
     const fieldName = row.querySelector('.field-name');
     if (!fieldName) return;
-    const field = getFieldMetadata('traces', fieldName.textContent);
+
+    // Determine signal type based on which table the row is in
+    let signalType = 'traces';
+    if (row.closest('#metric-fields-body')) signalType = 'metrics';
+    else if (row.closest('#log-fields-body')) signalType = 'logs';
+
+    // For metrics, the field name cell contains the instrument name
+    const name = fieldName.textContent.replace('🔗', '').replace(/trace$/, '').trim();
+    const field = getFieldMetadata(signalType, name);
     if (field) showInspector(field);
   });
 
