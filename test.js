@@ -1,5 +1,5 @@
 const assert = require('assert');
-const { getResourceAttributes, getSignalTypes, getTraceSchema, getSpanFields, getFieldMetadata, getSpanRelationships, getMetricFields, getLogFields, getSemanticConventions, getPipelineStageDetails, getNextPipelineStage } = require('./otel-logic.js');
+const { getResourceAttributes, getSignalTypes, getTraceSchema, getSpanFields, getFieldMetadata, getSpanRelationships, getMetricFields, getLogFields, getSemanticConventions, getPipelineStageDetails, getNextPipelineStage, getRoutingScenarios, getRoutingScenario } = require('./otel-logic.js');
 
 // Test runner
 let passed = 0;
@@ -620,6 +620,80 @@ test('returns null for backends', () => {
 test('returns null for unknown stage', () => {
   const result = getNextPipelineStage('nonexistent');
   assert.strictEqual(result, null, 'unknown stage should return null');
+});
+
+// --- getRoutingScenarios ---
+console.log('getRoutingScenarios:');
+
+test('returns an array', () => {
+  const result = getRoutingScenarios();
+  assert.ok(Array.isArray(result), 'should return an array');
+});
+
+test('has at least 4 scenarios', () => {
+  const result = getRoutingScenarios();
+  assert.ok(result.length >= 4, `expected >= 4 scenarios, got ${result.length}`);
+});
+
+test('includes all-to-one', () => {
+  const result = getRoutingScenarios();
+  const found = result.find(s => s.id === 'all-to-one');
+  assert.ok(found, 'all-to-one scenario should be present');
+});
+
+test('includes by-signal-type', () => {
+  const result = getRoutingScenarios();
+  const found = result.find(s => s.id === 'by-signal-type');
+  assert.ok(found, 'by-signal-type scenario should be present');
+});
+
+test('includes by-environment', () => {
+  const result = getRoutingScenarios();
+  const found = result.find(s => s.id === 'by-environment');
+  assert.ok(found, 'by-environment scenario should be present');
+});
+
+test('includes by-sampling', () => {
+  const result = getRoutingScenarios();
+  const found = result.find(s => s.id === 'by-sampling');
+  assert.ok(found, 'by-sampling scenario should be present');
+});
+
+test('each scenario has id, name, description, routes', () => {
+  const result = getRoutingScenarios();
+  for (const s of result) {
+    assert.ok('id' in s, `${JSON.stringify(s)} missing id`);
+    assert.ok('name' in s, `${s.id} missing name`);
+    assert.ok('description' in s, `${s.id} missing description`);
+    assert.ok('routes' in s, `${s.id} missing routes`);
+    assert.ok(Array.isArray(s.routes), `${s.id} routes should be an array`);
+  }
+});
+
+test('each route has signal, destination, filter', () => {
+  const result = getRoutingScenarios();
+  for (const s of result) {
+    for (const r of s.routes) {
+      assert.ok('signal' in r, `${s.id} route missing signal`);
+      assert.ok('destination' in r, `${s.id} route missing destination`);
+      assert.ok('filter' in r, `${s.id} route missing filter`);
+    }
+  }
+});
+
+// --- getRoutingScenario ---
+console.log('getRoutingScenario:');
+
+test('returns correct scenario for by-signal-type', () => {
+  const result = getRoutingScenario('by-signal-type');
+  assert.ok(result, 'should return a scenario for by-signal-type');
+  assert.strictEqual(result.id, 'by-signal-type', 'should have id by-signal-type');
+  assert.strictEqual(result.name, 'Route by signal type', 'should have correct name');
+});
+
+test('returns null for unknown scenario', () => {
+  const result = getRoutingScenario('nonexistent');
+  assert.strictEqual(result, null, 'should return null for unknown scenario');
 });
 
 // --- Summary ---

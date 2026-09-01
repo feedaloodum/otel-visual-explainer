@@ -486,9 +486,59 @@ function getNextPipelineStage(currentStageId) {
   return pipelineStageOrder[idx + 1];
 }
 
+// Routing scenarios for the "Where Cribl Fits" section
+const routingScenarios = [
+  {
+    id: 'all-to-one',
+    name: 'Route all to one backend',
+    description: 'Simple passthrough — all telemetry goes to a single backend.',
+    routes: [
+      { signal: 'all', destination: 'Single Backend', filter: 'none' }
+    ]
+  },
+  {
+    id: 'by-signal-type',
+    name: 'Route by signal type',
+    description: 'Traces to Jaeger, metrics to Prometheus, logs to Elasticsearch.',
+    routes: [
+      { signal: 'traces', destination: 'Jaeger', filter: 'signal.type == "traces"' },
+      { signal: 'metrics', destination: 'Prometheus', filter: 'signal.type == "metrics"' },
+      { signal: 'logs', destination: 'Elasticsearch', filter: 'signal.type == "logs"' }
+    ]
+  },
+  {
+    id: 'by-environment',
+    name: 'Route by environment',
+    description: 'Dev traffic to cheap storage, prod traffic to premium backends.',
+    routes: [
+      { signal: 'all', destination: 'Cheap S3 Storage', filter: 'deployment.environment == "dev"' },
+      { signal: 'all', destination: 'Premium Backends', filter: 'deployment.environment == "prod"' }
+    ]
+  },
+  {
+    id: 'by-sampling',
+    name: 'Route by sampling',
+    description: 'Sample traces at 10%, keep all metrics and logs.',
+    routes: [
+      { signal: 'traces', destination: 'Jaeger (10% sampled)', filter: 'traces sampled at 10%' },
+      { signal: 'metrics', destination: 'Prometheus (full)', filter: 'no sampling' },
+      { signal: 'logs', destination: 'Elasticsearch (full)', filter: 'no sampling' }
+    ]
+  }
+];
+
+function getRoutingScenarios() {
+  return routingScenarios;
+}
+
+function getRoutingScenario(scenarioId) {
+  const scenario = routingScenarios.find(s => s.id === scenarioId);
+  return scenario || null;
+}
+
 // Export for Node.js (test.js), expose globally for browser (<script>)
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { getResourceAttributes, getSignalTypes, getTraceSchema, getSpanFields, getFieldMetadata, getSpanRelationships, getMetricFields, getLogFields, getSemanticConventions, getPipelineStageDetails, getNextPipelineStage };
+  module.exports = { getResourceAttributes, getSignalTypes, getTraceSchema, getSpanFields, getFieldMetadata, getSpanRelationships, getMetricFields, getLogFields, getSemanticConventions, getPipelineStageDetails, getNextPipelineStage, getRoutingScenarios, getRoutingScenario };
 }
 if (typeof window !== 'undefined') {
   window.getResourceAttributes = getResourceAttributes;
@@ -502,4 +552,6 @@ if (typeof window !== 'undefined') {
   window.getSemanticConventions = getSemanticConventions;
   window.getPipelineStageDetails = getPipelineStageDetails;
   window.getNextPipelineStage = getNextPipelineStage;
+  window.getRoutingScenarios = getRoutingScenarios;
+  window.getRoutingScenario = getRoutingScenario;
 }

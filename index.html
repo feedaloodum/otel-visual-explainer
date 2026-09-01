@@ -11,6 +11,7 @@
   --otel-blue: #4285f4;
   --otel-orange-light: #ffb838;
   --otel-teal-light: #5a73d8;
+  --cribl-accent: #00d4aa;
   --bg-primary: #0d1117;
   --bg-secondary: #161b22;
   --bg-tertiary: #1c2330;
@@ -1059,6 +1060,319 @@ body {
   animation: packet-flow 2.5s linear infinite;
   box-shadow: 0 0 5px rgba(245, 168, 0, 0.6);
 }
+
+/* Where Cribl Fits — uses Cribl accent color to mark visual transition */
+.section-card.cribl-section {
+  border-color: var(--cribl-accent);
+  border-top: 3px solid var(--cribl-accent);
+  box-shadow: 0 0 0 1px rgba(0, 212, 170, 0.15);
+}
+
+.section-card.cribl-section .reveal-toggle {
+  color: var(--cribl-accent);
+}
+
+.section-card.cribl-section h2 {
+  color: var(--cribl-accent);
+}
+
+.section-card.cribl-section .cribl-tag {
+  display: inline-block;
+  font-size: 11px;
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  background: rgba(0, 212, 170, 0.15);
+  color: var(--cribl-accent);
+  padding: 2px 8px;
+  border-radius: 4px;
+  margin-left: 8px;
+  vertical-align: middle;
+}
+
+/* Interception point diagram */
+.cribl-diagram {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: nowrap;
+  gap: 0;
+  margin: var(--spacing-md) 0;
+  padding: var(--spacing-sm);
+  overflow-x: auto;
+}
+
+.cribl-source {
+  background: var(--bg-tertiary);
+  border: 2px solid var(--border);
+  border-top: 3px solid var(--otel-teal);
+  border-radius: var(--radius);
+  padding: 14px 18px;
+  text-align: center;
+  min-width: 100px;
+  flex-shrink: 0;
+}
+
+.cribl-source .cs-icon { font-size: 26px; display: block; margin-bottom: 4px; }
+.cribl-source .cs-name { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+
+/* Arrow from Collector into Cribl */
+.cribl-inflow {
+  position: relative;
+  flex: 0 0 80px;
+  min-width: 60px;
+  max-width: 100px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cribl-inflow::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 8px;
+  height: 2px;
+  background: var(--cribl-accent);
+  transform: translateY(-50%);
+}
+
+.cribl-inflow .arrow-head {
+  position: absolute;
+  top: 50%;
+  right: 0;
+  width: 0;
+  height: 0;
+  border-left: 8px solid var(--cribl-accent);
+  border-top: 5px solid transparent;
+  border-bottom: 5px solid transparent;
+  transform: translateY(-50%);
+}
+
+.cribl-inflow .inflow-packet {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--cribl-accent);
+  transform: translateY(-50%);
+  opacity: 0;
+  animation: packet-flow 2.2s linear infinite;
+  box-shadow: 0 0 6px rgba(0, 212, 170, 0.6);
+}
+
+/* Cribl box itself — visually distinct with accent color */
+.cribl-box {
+  background: rgba(0, 212, 170, 0.08);
+  border: 2px solid var(--cribl-accent);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  text-align: center;
+  min-width: 120px;
+  flex-shrink: 0;
+  box-shadow: 0 0 16px rgba(0, 212, 170, 0.2);
+}
+
+.cribl-box .cb-icon { font-size: 30px; display: block; margin-bottom: 6px; }
+.cribl-box .cb-name { font-size: 14px; font-weight: 700; color: var(--cribl-accent); }
+.cribl-box .cb-sub { font-size: 11px; color: var(--text-secondary); margin-top: 4px; font-family: var(--font-mono); }
+
+/* Fan-out arrows from Cribl to backends */
+.cribl-fanout {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 6px;
+  flex: 0 0 90px;
+  min-width: 60px;
+  max-width: 110px;
+}
+
+.cribl-fanout-row {
+  position: relative;
+  height: 2px;
+  background: var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.cribl-fanout-row.active {
+  background: var(--cribl-accent);
+  box-shadow: 0 0 6px rgba(0, 212, 170, 0.5);
+}
+
+.cribl-fanout-row::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 50%;
+  width: 0;
+  height: 0;
+  border-left: 7px solid var(--border);
+  border-top: 4px solid transparent;
+  border-bottom: 4px solid transparent;
+  transform: translateY(-50%);
+}
+
+.cribl-fanout-row.active::after {
+  border-left-color: var(--cribl-accent);
+}
+
+/* Backend destination boxes */
+.cribl-backends {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.cribl-backend {
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-align: center;
+  min-width: 140px;
+  transition: all 0.3s ease;
+}
+
+.cribl-backend.active {
+  border-color: var(--cribl-accent);
+  color: var(--cribl-accent);
+  background: rgba(0, 212, 170, 0.06);
+  box-shadow: 0 0 10px rgba(0, 212, 170, 0.25);
+}
+
+.cribl-backend .be-icon { margin-right: 4px; }
+
+/* Routing scenario selectors */
+.cribl-scenario-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: var(--spacing-md) 0;
+}
+
+.cribl-scenario-btn {
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  border-radius: 6px;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-family: var(--font-sans);
+  cursor: pointer;
+  transition: all 0.25s;
+}
+
+.cribl-scenario-btn:hover {
+  border-color: var(--cribl-accent);
+  color: var(--text-primary);
+}
+
+.cribl-scenario-btn.active {
+  background: rgba(0, 212, 170, 0.12);
+  border-color: var(--cribl-accent);
+  color: var(--cribl-accent);
+  box-shadow: 0 0 8px rgba(0, 212, 170, 0.2);
+}
+
+/* Scenario description + route list */
+.cribl-scenario-detail {
+  margin: var(--spacing-sm) 0;
+  padding: var(--spacing-sm);
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.cribl-route-list {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.cribl-route-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  padding: 5px 10px;
+  border-radius: 4px;
+  background: var(--bg-tertiary);
+}
+
+.cribl-route-signal {
+  color: var(--cribl-accent);
+  font-weight: 600;
+  min-width: 70px;
+}
+
+.cribl-route-dest { color: var(--text-primary); }
+.cribl-route-filter { color: var(--text-muted); margin-left: auto; font-size: 11px; }
+
+/* Cribl value prop callouts */
+.cribl-value-props {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-top: var(--spacing-md);
+}
+
+.cribl-value-card {
+  background: var(--bg-tertiary);
+  border: 1px solid var(--cribl-accent);
+  border-left: 3px solid var(--cribl-accent);
+  border-radius: var(--radius);
+  padding: var(--spacing-sm);
+  transition: transform 0.25s, box-shadow 0.25s;
+}
+
+.cribl-value-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 12px rgba(0, 212, 170, 0.15);
+}
+
+.cribl-value-card .vc-icon {
+  font-size: 24px;
+  color: var(--cribl-accent);
+  display: inline-block;
+  margin-right: 8px;
+  vertical-align: middle;
+}
+
+.cribl-value-card .vc-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--cribl-accent);
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.cribl-value-card .vc-desc {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin-top: 8px;
+}
+
+@media (max-width: 600px) {
+  .cribl-value-props { grid-template-columns: 1fr; }
+}
 </style>
 </head>
 <body>
@@ -1284,6 +1598,80 @@ body {
               </div>
             </div>
           </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Where Cribl Fits -->
+  <div class="section-card cribl-section">
+    <div class="reveal-toggle open" onclick="this.classList.toggle('open'); this.nextElementSibling.classList.toggle('collapsed');">Where Cribl Fits <span class="cribl-tag">Cribl</span></div>
+    <div class="card-body">
+      <h2><span class="icon-dot" style="background: var(--cribl-accent);"></span>Where Cribl Fits <span class="cribl-tag">Cribl</span></h2>
+      <p>
+        Cribl Stream and Cribl Edge sit at the interception point of your OTel pipeline — between the
+        Collector and your backends. They let you <strong>transform</strong>, <strong>route</strong>,
+        <strong>reduce</strong>, and <strong>tier</strong> telemetry before it lands in storage. Pick a
+        routing scenario below to see how Cribl fans out OTLP traffic.
+      </p>
+
+      <!-- Interception point diagram -->
+      <div class="cribl-diagram" id="cribl-diagram">
+        <!-- Collector source -->
+        <div class="cribl-source">
+          <span class="cs-icon">🔀</span>
+          <span class="cs-name">Collector</span>
+        </div>
+        <!-- Inflow arrow with animated packet -->
+        <div class="cribl-inflow">
+          <span class="inflow-packet"></span>
+          <span class="arrow-head"></span>
+        </div>
+        <!-- Cribl box -->
+        <div class="cribl-box">
+          <span class="cb-icon">🛡</span>
+          <span class="cb-name">Cribl Stream/Edge</span>
+          <div class="cb-sub">interception point</div>
+        </div>
+        <!-- Fan-out arrows -->
+        <div class="cribl-fanout" id="cribl-fanout">
+          <div class="cribl-fanout-row" data-dest="jaeger"></div>
+          <div class="cribl-fanout-row" data-dest="prometheus"></div>
+          <div class="cribl-fanout-row" data-dest="elasticsearch"></div>
+          <div class="cribl-fanout-row" data-dest="s3"></div>
+        </div>
+        <!-- Backend destinations -->
+        <div class="cribl-backends" id="cribl-backends">
+          <div class="cribl-backend" data-dest="jaeger"><span class="be-icon">🔍</span>Jaeger</div>
+          <div class="cribl-backend" data-dest="prometheus"><span class="be-icon">📊</span>Prometheus</div>
+          <div class="cribl-backend" data-dest="elasticsearch"><span class="be-icon">📜</span>Elasticsearch</div>
+          <div class="cribl-backend" data-dest="s3"><span class="be-icon">🗄</span>S3</div>
+        </div>
+      </div>
+
+      <!-- Routing scenario selectors -->
+      <div class="cribl-scenario-tabs" id="cribl-scenario-tabs"></div>
+
+      <!-- Scenario detail / route list -->
+      <div class="cribl-scenario-detail" id="cribl-scenario-detail"></div>
+
+      <!-- Cribl value prop callouts -->
+      <div class="cribl-value-props">
+        <div class="cribl-value-card">
+          <div><span class="vc-icon">🔄</span><span class="vc-title">Transform</span></div>
+          <div class="vc-desc">Reshape OTel data, drop or redact sensitive attributes before they reach storage.</div>
+        </div>
+        <div class="cribl-value-card">
+          <div><span class="vc-icon">🔀</span><span class="vc-title">Route</span></div>
+          <div class="vc-desc">Fan-out to multiple backends based on content — signal type, environment, or any attribute.</div>
+        </div>
+        <div class="cribl-value-card">
+          <div><span class="vc-icon">📉</span><span class="vc-title">Reduce</span></div>
+          <div class="vc-desc">Drop unnecessary data, sample, and aggregate to cut telemetry volume and cost.</div>
+        </div>
+        <div class="cribl-value-card">
+          <div><span class="vc-icon">🗄</span><span class="vc-title">Tier</span></div>
+          <div class="vc-desc">Route to appropriate storage based on data value — hot, warm, or cold tiers.</div>
         </div>
       </div>
     </div>
@@ -1636,6 +2024,110 @@ body {
     `;
     detailPanel.classList.add('visible');
   });
+})();
+
+// Render Where Cribl Fits — routing scenarios + interception diagram
+(function renderCriblSection() {
+  const tabsContainer = document.getElementById('cribl-scenario-tabs');
+  const detailContainer = document.getElementById('cribl-scenario-detail');
+  const fanoutContainer = document.getElementById('cribl-fanout');
+  const backendsContainer = document.getElementById('cribl-backends');
+  if (!tabsContainer || !detailContainer || !fanoutContainer || !backendsContainer) return;
+
+  // Map destination names from routing scenarios to diagram backend data-dest keys
+  const destKeyMap = {
+    'jaeger': 'jaeger', 'Jaeger': 'jaeger',
+    'prometheus': 'prometheus', 'Prometheus': 'prometheus',
+    'elasticsearch': 'elasticsearch', 'Elasticsearch': 'elasticsearch',
+    's3': 's3', 'S3': 's3', 'Cheap S3 Storage': 's3'
+  };
+
+  function destKey(destName) {
+    const lower = destName.toLowerCase();
+    if (lower.includes('jaeger')) return 'jaeger';
+    if (lower.includes('prometheus')) return 'prometheus';
+    if (lower.includes('elastic')) return 'elasticsearch';
+    if (lower.includes('s3')) return 's3';
+    if (lower.includes('single')) return 'jaeger'; // all-to-one maps to a single backend
+    if (lower.includes('premium')) return 'jaeger'; // premium backends — light all
+    return null;
+  }
+
+  // For the "all-to-one" and "by-environment" scenarios, some routes go to
+  // destinations not in the 4-box diagram. We activate the relevant boxes
+  // and light up matching fan-out rows.
+  function activeDestKeys(scenario) {
+    const keys = new Set();
+    for (const route of scenario.routes) {
+      const lower = route.destination.toLowerCase();
+      if (lower.includes('jaeger')) keys.add('jaeger');
+      else if (lower.includes('prometheus')) keys.add('prometheus');
+      else if (lower.includes('elastic')) keys.add('elasticsearch');
+      else if (lower.includes('s3')) keys.add('s3');
+      else if (lower.includes('single')) {
+        // Single Backend — light up Jaeger as representative
+        keys.add('jaeger');
+      } else if (lower.includes('premium')) {
+        // Premium Backends — light up all three "premium" backends
+        keys.add('jaeger');
+        keys.add('prometheus');
+        keys.add('elasticsearch');
+      }
+    }
+    return keys;
+  }
+
+  const scenarios = getRoutingScenarios();
+
+  // Build scenario selector buttons
+  tabsContainer.innerHTML = scenarios.map(s =>
+    `<button class="cribl-scenario-btn" data-scenario-id="${s.id}">${s.name}</button>`
+  ).join('');
+
+  // Render scenario detail (description + route list)
+  function renderScenario(scenarioId) {
+    const scenario = getRoutingScenario(scenarioId);
+    if (!scenario) return;
+
+    // Update active button state
+    tabsContainer.querySelectorAll('.cribl-scenario-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.scenarioId === scenarioId);
+    });
+
+    // Route list
+    const routesHtml = scenario.routes.map(r =>
+      `<div class="cribl-route-item">
+        <span class="cribl-route-signal">${r.signal}</span>
+        <span class="cribl-route-dest">→ ${r.destination}</span>
+        <span class="cribl-route-filter">${r.filter}</span>
+      </div>`
+    ).join('');
+
+    detailContainer.innerHTML = `
+      <div><strong style="color: var(--cribl-accent);">${scenario.name}</strong></div>
+      <div style="margin-top: 6px;">${scenario.description}</div>
+      <div class="cribl-route-list">${routesHtml}</div>
+    `;
+
+    // Light up fan-out arrows and backend boxes
+    const activeKeys = activeDestKeys(scenario);
+    fanoutContainer.querySelectorAll('.cribl-fanout-row').forEach(row => {
+      row.classList.toggle('active', activeKeys.has(row.dataset.dest));
+    });
+    backendsContainer.querySelectorAll('.cribl-backend').forEach(be => {
+      be.classList.toggle('active', activeKeys.has(be.dataset.dest));
+    });
+  }
+
+  // Click handler for scenario tabs
+  tabsContainer.addEventListener('click', (e) => {
+    const btn = e.target.closest('.cribl-scenario-btn');
+    if (!btn) return;
+    renderScenario(btn.dataset.scenarioId);
+  });
+
+  // Default to "by-signal-type" scenario on load (most illustrative)
+  renderScenario('by-signal-type');
 })();
 </script>
 </body>
